@@ -17,9 +17,8 @@ order: 3
 
 {% include code-link.html path="Funcional1/src/lf1/plp/functional1/Programa.java" %} ::= {% include code-link.html path="Funcional1/src/lf1/plp/expressions2/expression/Expressao.java" %}
 
-{% include code-link.html path="Funcional1/src/lf1/plp/expressions2/expression/Valor.java" %} ::= {% include code-link.html path="Funcional1/src/lf1/plp/expressions2/expression/ValorConcreto.java" %}
-
-Expressao ::= {% include code-link.html path="Funcional1/src/lf1/plp/expressions2/expression/ExpUnaria.java" %}\
+Expressao ::= {% include code-link.html path="Funcional1/src/lf1/plp/expressions2/expression/Valor.java" %}\
+{% include code-indent.html %}| {% include code-link.html path="Funcional1/src/lf1/plp/expressions2/expression/ExpUnaria.java" %}\
 {% include code-indent.html %}| {% include code-link.html path="Funcional1/src/lf1/plp/functional1/expression/ExpDeclaracao.java" %}\
 {% include code-indent.html %}| {% include code-link.html path="Funcional1/src/lf1/plp/expressions2/expression/Id.java" %}\
 {% include code-indent.html %}| {% include code-link.html path="Funcional1/src/lf1/plp/functional1/expression/Aplicacao.java" %}\
