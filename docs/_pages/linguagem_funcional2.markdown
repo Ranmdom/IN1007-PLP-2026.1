@@ -20,6 +20,7 @@ order: 4
 
 Expressao ::= {% include code-link.html path="Funcional2/src/lf2/plp/expressions2/expression/Valor.java" %}\
 {% include code-indent.html %}| {% include code-link.html path="Funcional2/src/lf2/plp/expressions2/expression/ExpUnaria.java" %}\
+{% include code-indent.html %}| {% include code-link.html path="Funcional2/src/lf2/plp/expressions2/expression/ExpBinaria.java" %}\
 {% include code-indent.html %}| {% include code-link.html path="Funcional2/src/lf2/plp/functional2/expression/ExpDeclaracao.java" %}\
 {% include code-indent.html %}| {% include code-link.html path="Funcional2/src/lf2/plp/expressions2/expression/Id.java" %}\
 {% include code-indent.html %}| {% include code-link.html path="Funcional2/src/lf2/plp/functional2/expression/Aplicacao.java" %}\
