@@ -1,9 +1,2 @@
-{ 
-   var a  =  1 ,
-   proc incA (int z)  {
-     a := a + z
-   };
-   call incA(3);
-   call incA(5);
-   write(a)
-}
+
+ write(true or false and true)

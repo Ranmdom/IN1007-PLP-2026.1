@@ -2,8 +2,8 @@
 
 ## Universidade Federal de Pernambuco
 
-**Centro de informática** <br>
-**Disciplina:** IN1007-2026.1 - **Paradigmas de Linguagens de programação**
+**Centro de Informática** <br>
+**Disciplina:** IN1007-2026.1 - **Paradigmas de Linguagens de Programação**
 
 ## Equipe
 * **Romulo Vital Domingos** - rvd@cin.ufpe.br
@@ -63,7 +63,7 @@ A construção segue o modelo clássico de compiladores, mas com o backend volta
 
 Para que a gramática da Imperativa 2 funcione corretamente em um gerador como o JavaCC, foram aplicados ajustes técnicos importantes:
 
-- Fatoração de expressões: a regra de expressões binárias precisa ser reorganizada para remover recursão à esquerda e preservar precedência.
+- Fatoração de expressões: a regra de expressões binárias precisa ser reorganizada para remover recursão à esquerda indireta e preservar precedência entre operadores.
 - Simplificação da AST: símbolos da sintaxe concreta, como parênteses, chaves e `:=`, são descartados na árvore abstrata, preservando apenas a estrutura lógica relevante.
 
 #### 4. O Coração da Construção: Padrão Visitor
@@ -85,7 +85,7 @@ Este projeto é um estudo de caso adequado para a disciplina porque evidencia co
 
 ## BNF de Referência
 
-Nesta seção, os trechos em negrito indicam as adaptações realizadas sobre a BNF original para torná-la compatível com o parser. O principal ajuste ocorreu na fatoração das expressões, necessária para evitar recursão à esquerda e explicitar a precedência entre operadores.
+Nesta seção, a BNF original é apresentada como referência conceitual da linguagem. Em seguida, são destacadas as adaptações feitas na gramática implementada no parser, especialmente na parte de expressões. Os trechos em negrito correspondem à forma fatorada usada para tornar a gramática compatível com análise descendente e explicitar a precedência entre operadores.
 
 ## BNF Original
 
@@ -177,7 +177,7 @@ Essa cadeia mostra que `ExpBinaria` pode voltar a si mesma pelo lado esquerdo da
 
 ### Regras Adaptadas para o Parser
 
-As regras abaixo correspondem às alterações centrais feitas sobre a BNF original:
+As regras abaixo correspondem às alterações centrais feitas sobre a BNF original. Elas representam a forma usada na implementação atual do parser:
 
 **ExpBinaria ::= ExpBinaria2 [ "==" ExpBinaria2 ]**
 
@@ -186,6 +186,25 @@ As regras abaixo correspondem às alterações centrais feitas sobre a BNF origi
 **ExpBinaria3 ::= ExpUnaria { "and" ExpUnaria }**
 
 Essas alterações reorganizam a gramática em níveis, permitindo tratar precedência e associatividade de forma mais adequada ao processo de análise sintática.
+
+Os principais pontos técnicos dessa adaptação são:
+
+- Na BNF original, `ExpBinaria` é definida a partir de `Expressao`, e `Expressao` também pode derivar para `ExpBinaria`. Isso introduz recursão à esquerda indireta.
+- A gramática original reúne vários operadores binários em uma única regra, sem separar claramente níveis de precedência. Isso torna mais difícil controlar a interpretação de expressões compostas.
+- A fatoração em `ExpBinaria`, `ExpBinaria2` e `ExpBinaria3` divide o processamento em camadas, refletindo melhor a precedência dos operadores.
+- A reorganização também favorece a construção da AST, porque cada nível sintático passa a representar um grupo mais específico de operações.
+
+### Validação da Gramática Adaptada
+
+A validação prática foi feita executando a versão atual do parser com expressões e programas válidos da Linguagem Imperativa 2. Como a implementação já utiliza a gramática fatorada, os testes não reproduzem a BNF original literalmente; eles verificam que a adaptação adotada funciona corretamente.
+
+Exemplos de entradas usadas na validação:
+
+- `write(1 + 2 + 3)`, com resultado `6`.
+- `write(true or false and true)`, com resultado `true`.
+- Blocos com declaração e chamada de procedimento, como o caso em que uma variável `a` é atualizada por `incA(z)` e o programa imprime `9`.
+
+Esses testes reforçam que a implementação atual analisa e executa corretamente expressões compostas, chamadas de procedimento e comandos da linguagem.
 
 
 
@@ -229,3 +248,4 @@ Esta seção funciona como um mapa entre os elementos da BNF e os arquivos princ
 ## Parser
 
 - [Imperative2](./PLP_2026/Imperativa2/src/li2/plp/imperative2/parser/Imperative2.jj)
+
