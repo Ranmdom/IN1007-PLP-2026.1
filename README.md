@@ -7,7 +7,7 @@
 
 ## Equipe
 * **Romulo Vital Domingos** - rvd@cin.ufpe.br
-*  
+* **Nickolas Vitor Gomes da Silva** - nvgs@cin.ufpe.br
 
 
 Este repositório organiza o projeto da disciplina de Paradigmas de Linguagens de Programação com o código-fonte do fork concentrado em `PLP_2026/` e a documentação geral na raiz. O foco deste trabalho é a construção de um analisador estático e linter para a Linguagem Imperativa 2.
