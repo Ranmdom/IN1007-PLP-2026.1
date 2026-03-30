@@ -169,6 +169,34 @@ As regras abaixo correspondem às alterações centrais feitas sobre a BNF origi
 
 Essas alterações reorganizam a gramática em níveis, permitindo tratar precedência e associatividade de forma mais adequada ao processo de análise sintática.
 
+## Navegação da Implementação
+
+Esta seção funciona como um mapa entre os elementos da BNF e os arquivos principais do projeto, facilitando a navegação entre a descrição formal da linguagem e sua implementação.
+
+### Mapeamento BNF -> Implementação
+
+- `Programa` -> [Programa.java](./PLP_2026/Imperativa2/src/li2/plp/imperative2/Programa.java)
+- `Comando` -> comandos base em [imperative1/command](./PLP_2026/Imperativa2/src/li2/plp/imperative1/command)
+- `Atribuicao` -> [Atribuicao.java](./PLP_2026/Imperativa2/src/li2/plp/imperative1/command/Atribuicao.java)
+- `ComandoDeclaracao` -> [ComandoDeclaracao.java](./PLP_2026/Imperativa2/src/li2/plp/imperative1/command/ComandoDeclaracao.java)
+- `While` -> [While.java](./PLP_2026/Imperativa2/src/li2/plp/imperative1/command/While.java)
+- `IfThenElse` -> [IfThenElse.java](./PLP_2026/Imperativa2/src/li2/plp/imperative1/command/IfThenElse.java)
+- `IO` -> [Write.java](./PLP_2026/Imperativa2/src/li2/plp/imperative1/command/Write.java) e [Read.java](./PLP_2026/Imperativa2/src/li2/plp/imperative1/command/Read.java)
+- `Skip` -> [Skip.java](./PLP_2026/Imperativa2/src/li2/plp/imperative1/command/Skip.java)
+- `ChamadaProcedimento` -> [ChamadaProcedimento.java](./PLP_2026/Imperativa2/src/li2/plp/imperative2/command/ChamadaProcedimento.java)
+- `ListaExpressao` -> [ListaExpressao.java](./PLP_2026/Imperativa2/src/li2/plp/imperative2/command/ListaExpressao.java)
+- `DeclaracaoVariavel` -> [DeclaracaoVariavel.java](./PLP_2026/Imperativa2/src/li2/plp/imperative1/declaration/DeclaracaoVariavel.java)
+- `DeclaracaoComposta` -> [DeclaracaoComposta.java](./PLP_2026/Imperativa2/src/li2/plp/imperative1/declaration/DeclaracaoComposta.java)
+- `DeclaracaoProcedimento` -> [DeclaracaoProcedimento.java](./PLP_2026/Imperativa2/src/li2/plp/imperative2/declaration/DeclaracaoProcedimento.java)
+- `Expressao` -> [Expressao.java](./PLP_2026/Imperativa2/src/li2/plp/expressions2/expression/Expressao.java)
+- `Id` -> [Id.java](./PLP_2026/Imperativa2/src/li2/plp/expressions2/expression/Id.java)
+- `Valor` -> [Valor.java](./PLP_2026/Imperativa2/src/li2/plp/expressions2/expression/Valor.java)
+- `ValorInteiro` -> [ValorInteiro.java](./PLP_2026/Imperativa2/src/li2/plp/expressions2/expression/ValorInteiro.java)
+- `ValorBooleano` -> [ValorBooleano.java](./PLP_2026/Imperativa2/src/li2/plp/expressions2/expression/ValorBooleano.java)
+- `ValorString` -> [ValorString.java](./PLP_2026/Imperativa2/src/li2/plp/expressions2/expression/ValorString.java)
+- `ValorConcreto` -> [ValorConcreto.java](./PLP_2026/Imperativa2/src/li2/plp/expressions2/expression/ValorConcreto.java)
+- `Tipo` -> [Tipo.java](./PLP_2026/Imperativa2/src/li2/plp/expressions1/util/Tipo.java)
+
 ## Classes Auxiliares
 
 - `AmbienteExecucaoImperativa2`
@@ -178,7 +206,15 @@ Essas alterações reorganizam a gramática em níveis, permitindo tratar preced
 - `ProcedimentoJaDeclaradoException`
 - `ProcedimentoNaoDeclaradoException`
 
+### Links Diretos das Classes Auxiliares
+
+- [AmbienteExecucaoImperativa2.java](./PLP_2026/Imperativa2/src/li2/plp/imperative2/memory/AmbienteExecucaoImperativa2.java)
+- [ContextoExecucaoImperativa2.java](./PLP_2026/Imperativa2/src/li2/plp/imperative2/memory/ContextoExecucaoImperativa2.java)
+- [ListaValor.java](./PLP_2026/Imperativa2/src/li2/plp/imperative1/memory/ListaValor.java)
+- [DefProcedimento.java](./PLP_2026/Imperativa2/src/li2/plp/imperative2/declaration/DefProcedimento.java)
+- [ProcedimentoJaDeclaradoException.java](./PLP_2026/Imperativa2/src/li2/plp/imperative2/memory/ProcedimentoJaDeclaradoException.java)
+- [ProcedimentoNaoDeclaradoException.java](./PLP_2026/Imperativa2/src/li2/plp/imperative2/memory/ProcedimentoNaoDeclaradoException.java)
+
 ## Parser
 
-- `Imperative2`
-
+- [Imperative2.jj](./PLP_2026/Imperativa2/src/li2/plp/imperative2/parser/Imperative2.jj)
