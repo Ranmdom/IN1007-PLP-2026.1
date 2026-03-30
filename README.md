@@ -156,6 +156,24 @@ ChamadaProcedimento ::= "call" Id "(" [ ListaExpressao ] ")"
 ListaExpressao ::= Expressao
                  | Expressao "," ListaExpressao
 ```
+### Prova Teórica da Recursão à Esquerda Indireta
+
+A BNF original apresenta recursão à esquerda indireta na definição de expressões binárias. Isso pode ser observado pelas regras:
+
+```text
+Expressao ::= Valor | ExpUnaria | ExpBinaria | Id
+ExpBinaria ::= Expressao "+" Expressao | ...
+```
+
+A derivação abaixo evidencia o problema:
+
+```text
+ExpBinaria
+=> Expressao "+" Expressao
+=> ExpBinaria "+" Expressao
+```
+
+Essa cadeia mostra que `ExpBinaria` pode voltar a si mesma pelo lado esquerdo da derivação, mas de forma indireta, passando antes por `Expressao`. Em parsers descendentes, como os normalmente construídos com JavaCC, essa forma de definição é inadequada porque dificulta a escolha de produção e compromete a análise sintática previsível.
 
 ### Regras Adaptadas para o Parser
 
@@ -168,6 +186,8 @@ As regras abaixo correspondem às alterações centrais feitas sobre a BNF origi
 **ExpBinaria3 ::= ExpUnaria { "and" ExpUnaria }**
 
 Essas alterações reorganizam a gramática em níveis, permitindo tratar precedência e associatividade de forma mais adequada ao processo de análise sintática.
+
+
 
 ## Navegação da Implementação
 
