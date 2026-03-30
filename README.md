@@ -2,7 +2,7 @@
 
 ## Universidade Federal de Pernambuco
 
-**Centro de informática**
+**Centro de informática** <br>
 **Disciplina:** IN1007-2026.1 - **Paradigmas de Linguagens de programação**
 
 ## Equipe
