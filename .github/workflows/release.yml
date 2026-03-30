@@ -18,7 +18,7 @@ jobs:
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
-        files: target/*.jar
+        files: PLP_2026/*/target/*.jar
         tag_name: ${{ github.ref_name }}
         name: Release ${{ github.ref_name }}
         body: |
