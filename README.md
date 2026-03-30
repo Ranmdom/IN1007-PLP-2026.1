@@ -199,22 +199,13 @@ Esta seção funciona como um mapa entre os elementos da BNF e os arquivos princ
 
 ## Classes Auxiliares
 
-- `AmbienteExecucaoImperativa2`
-- `ContextoExecucaoImperativa2`
-- `ListaValor`
-- `DefProcedimento`
-- `ProcedimentoJaDeclaradoException`
-- `ProcedimentoNaoDeclaradoException`
-
-### Links Diretos das Classes Auxiliares
-
-- [AmbienteExecucaoImperativa2.java](./PLP_2026/Imperativa2/src/li2/plp/imperative2/memory/AmbienteExecucaoImperativa2.java)
-- [ContextoExecucaoImperativa2.java](./PLP_2026/Imperativa2/src/li2/plp/imperative2/memory/ContextoExecucaoImperativa2.java)
-- [ListaValor.java](./PLP_2026/Imperativa2/src/li2/plp/imperative1/memory/ListaValor.java)
-- [DefProcedimento.java](./PLP_2026/Imperativa2/src/li2/plp/imperative2/declaration/DefProcedimento.java)
-- [ProcedimentoJaDeclaradoException.java](./PLP_2026/Imperativa2/src/li2/plp/imperative2/memory/ProcedimentoJaDeclaradoException.java)
-- [ProcedimentoNaoDeclaradoException.java](./PLP_2026/Imperativa2/src/li2/plp/imperative2/memory/ProcedimentoNaoDeclaradoException.java)
+- [AmbienteExecucaoImperativa2](./PLP_2026/Imperativa2/src/li2/plp/imperative2/memory/AmbienteExecucaoImperativa2.java)
+- [ContextoExecucaoImperativa2](./PLP_2026/Imperativa2/src/li2/plp/imperative2/memory/ContextoExecucaoImperativa2.java)
+- [ListaValor](./PLP_2026/Imperativa2/src/li2/plp/imperative1/memory/ListaValor.java)
+- [DefProcedimento](./PLP_2026/Imperativa2/src/li2/plp/imperative2/declaration/DefProcedimento.java)
+- [ProcedimentoJaDeclaradoException](./PLP_2026/Imperativa2/src/li2/plp/imperative2/memory/ProcedimentoJaDeclaradoException.java)
+- [ProcedimentoNaoDeclaradoException](./PLP_2026/Imperativa2/src/li2/plp/imperative2/memory/ProcedimentoNaoDeclaradoException.java)
 
 ## Parser
 
-- [Imperative2.jj](./PLP_2026/Imperativa2/src/li2/plp/imperative2/parser/Imperative2.jj)
+- [Imperative2](./PLP_2026/Imperativa2/src/li2/plp/imperative2/parser/Imperative2.jj)
