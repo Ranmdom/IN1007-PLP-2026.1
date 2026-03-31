@@ -14,7 +14,7 @@ Este repositório organiza o projeto da disciplina de Paradigmas de Linguagens d
 
 ## Introdução
 
-Este trabalho foi desenvolvido no contexto da disciplina de Paradigmas de Linguagens de Programação e propõe uma aplicação prática sobre a Linguagem Imperativa 2. A ideia central é investigar o programa não apenas pelo que ele executa, mas principalmente pela sua estrutura, pelas relações entre comandos e pelo comportamento que pode ser inferido estaticamente.
+Este trabalho está sendo desenvolvido no contexto da disciplina de Paradigmas de Linguagens de Programação e propõe uma aplicação prática sobre a Linguagem Imperativa 2. A ideia central é investigar o programa não apenas pelo que ele executa, mas principalmente pela sua estrutura, pelas relações entre comandos e pelo comportamento que pode ser inferido estaticamente.
 
 Ao direcionar o projeto para análise estática, o estudo passa a integrar conceitos de compiladores, gramáticas formais, árvores sintáticas abstratas, escopo e verificação semântica. Assim, o repositório deixa de ser apenas uma base de execução da linguagem e passa a servir como base para inspeção, validação e identificação de más práticas de programação.
 
@@ -177,7 +177,7 @@ Essa cadeia mostra que `ExpBinaria` pode voltar a si mesma pelo lado esquerdo da
 
 ### Regras Adaptadas para o Parser
 
-As regras abaixo correspondem às alterações centrais feitas sobre a BNF original. Elas representam a forma usada na implementação atual do parser:
+As regras abaixo correspondem às alterações centrais que serão feitas sobre a BNF original. Elas representam a forma usada na implementação atual do parser:
 
 **ExpBinaria ::= ExpBinaria2 [ "==" ExpBinaria2 ]**
 
@@ -193,20 +193,6 @@ Os principais pontos técnicos dessa adaptação são:
 - A gramática original reúne vários operadores binários em uma única regra, sem separar claramente níveis de precedência. Isso torna mais difícil controlar a interpretação de expressões compostas.
 - A fatoração em `ExpBinaria`, `ExpBinaria2` e `ExpBinaria3` divide o processamento em camadas, refletindo melhor a precedência dos operadores.
 - A reorganização também favorece a construção da AST, porque cada nível sintático passa a representar um grupo mais específico de operações.
-
-### Validação da Gramática Adaptada
-
-A validação prática foi feita executando a versão atual do parser com expressões e programas válidos da Linguagem Imperativa 2. Como a implementação já utiliza a gramática fatorada, os testes não reproduzem a BNF original literalmente; eles verificam que a adaptação adotada funciona corretamente.
-
-Exemplos de entradas usadas na validação:
-
-- `write(1 + 2 + 3)`, com resultado `6`.
-- `write(true or false and true)`, com resultado `true`.
-- Blocos com declaração e chamada de procedimento, como o caso em que uma variável `a` é atualizada por `incA(z)` e o programa imprime `9`.
-
-Esses testes reforçam que a implementação atual analisa e executa corretamente expressões compostas, chamadas de procedimento e comandos da linguagem.
-
-
 
 ## Navegação da Implementação
 
