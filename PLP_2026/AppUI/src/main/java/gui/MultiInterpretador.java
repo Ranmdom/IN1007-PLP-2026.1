@@ -41,6 +41,7 @@ public class MultiInterpretador {
 	private static final int IMP2 = 6;
 	private static final int OO1 = 7;
 	private static final int OO2 = 8;
+	private static final int LEFT_RECURSION_EXPERIMENT = 9;
 
 	private MessageBoard messageBoard;
 
@@ -92,6 +93,10 @@ public class MultiInterpretador {
 				break;
 			case OO2:
 				interpretarOO2(fis, listaEntrada);
+				break;
+			case LEFT_RECURSION_EXPERIMENT:
+				interpretarExperimentoRecursaoEsquerda(sourceCode);
+				break;
 			}
 		} catch (Exception e1) {
 			messageBoard.setText(e1.getMessage());
@@ -271,6 +276,33 @@ public class MultiInterpretador {
 		} else {
 			messageBoard.append("erro de tipos!");
 		}
+	}
+
+	private void interpretarExperimentoRecursaoEsquerda(String sourceCode) {
+		StringBuilder mensagem = new StringBuilder();
+		mensagem.append("Experimento: gramatica original com recursao a esquerda indireta.\n\n");
+		mensagem.append("BNF problematica:\n");
+		mensagem.append("Expression ::= Value | UnaryExpression | BinaryExpression\n");
+		mensagem.append("BinaryExpression ::= Expression \"+\" Expression | Expression \"-\" Expression\n\n");
+		mensagem.append("Derivacao critica:\n");
+		mensagem.append("BinaryExpression => Expression \"+\" Expression => BinaryExpression \"+\" Expression\n\n");
+		mensagem.append("Diagnostico esperado do JavaCC:\n");
+		mensagem.append("Left recursion detected: \"Expression... --> BinaryExpression... --> Expression...\"\n\n");
+
+		if (sourceCode != null && !sourceCode.trim().isEmpty()) {
+			mensagem.append("Entrada fornecida no front-end:\n");
+			mensagem.append(sourceCode.trim());
+			mensagem.append("\n\n");
+		} else {
+			mensagem.append("Entrada fornecida no front-end:\n");
+			mensagem.append("(nenhuma)\n\n");
+		}
+
+		mensagem.append("Observacao:\n");
+		mensagem.append("Esse erro acontece na etapa de geracao do parser, antes da execucao do programa.\n");
+		mensagem.append("Por isso, este modo experimental exibe o diagnostico da gramatica com erro em vez de interpretar o codigo.\n");
+
+		messageBoard.setText(mensagem.toString());
 	}
 
 	@SuppressWarnings("unchecked")

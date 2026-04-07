@@ -1,0 +1,78 @@
+options {
+  STATIC = false;
+}
+
+PARSER_BEGIN(IndirectLeftRecursionDemo)
+package experiment.leftrec;
+
+public class IndirectLeftRecursionDemo {
+
+  public static void main(String[] args) throws Exception {
+    IndirectLeftRecursionDemo parser = new IndirectLeftRecursionDemo(System.in);
+    parser.Start();
+    System.out.println("Parse concluido sem erro.");
+  }
+}
+PARSER_END(IndirectLeftRecursionDemo)
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+}
+
+TOKEN :
+{
+  < INT: (["0"-"9"])+ >
+| < PLUS: "+" >
+| < MINUS: "-" >
+| < NOT: "not" >
+| < LPAREN: "(" >
+| < RPAREN: ")" >
+}
+
+void Start() :
+{}
+{
+  Expression() <EOF>
+}
+
+/*
+ * Estrutura propositalmente problematica:
+ *
+ * Expression -> BinaryExpression
+ * BinaryExpression -> Expression op Expression
+ *
+ * O lado esquerdo volta para Expression antes de uma consolidacao adequada
+ * do parse, reproduzindo a situacao de recursao a esquerda indireta.
+ */
+void Expression() :
+{}
+{
+    Value()
+  | UnaryExpression()
+  | BinaryExpression()
+}
+
+void Value() :
+{}
+{
+    <INT>
+  | <LPAREN> Expression() <RPAREN>
+}
+
+void UnaryExpression() :
+{}
+{
+    <MINUS> Expression()
+  | <NOT> Expression()
+}
+
+void BinaryExpression() :
+{}
+{
+    Expression() <PLUS> Expression()
+  | Expression() <MINUS> Expression()
+}

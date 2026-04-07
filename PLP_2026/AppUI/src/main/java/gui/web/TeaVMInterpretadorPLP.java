@@ -27,7 +27,7 @@ public class TeaVMInterpretadorPLP {
 
         linguagens.addEventListener("change", evt -> {
             int index = linguagens.getSelectedIndex();            
-            entrada.setDisabled(index <= 3);
+            entrada.setDisabled(index <= 3 || index == 9);
         });
 
         btn.addEventListener("click", evt -> {

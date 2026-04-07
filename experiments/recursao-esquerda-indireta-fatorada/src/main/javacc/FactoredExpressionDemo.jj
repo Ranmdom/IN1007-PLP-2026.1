@@ -1,0 +1,74 @@
+options {
+  STATIC = false;
+}
+
+PARSER_BEGIN(FactoredExpressionDemo)
+package experiment.leftrec.fixed;
+
+public class FactoredExpressionDemo {
+
+  public static void main(String[] args) throws Exception {
+    FactoredExpressionDemo parser = new FactoredExpressionDemo(System.in);
+    parser.Start();
+    System.out.println("Parse concluido sem erro.");
+  }
+}
+PARSER_END(FactoredExpressionDemo)
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+}
+
+TOKEN :
+{
+  < INT: (["0"-"9"])+ >
+| < PLUS: "+" >
+| < MINUS: "-" >
+| < EQ: "==" >
+| < NOT: "not" >
+| < LPAREN: "(" >
+| < RPAREN: ")" >
+}
+
+void Start() :
+{}
+{
+  Expression() <EOF>
+}
+
+void Expression() :
+{}
+{
+  EqualityExpression()
+}
+
+void EqualityExpression() :
+{}
+{
+  AdditiveExpression() [ <EQ> AdditiveExpression() ]
+}
+
+void AdditiveExpression() :
+{}
+{
+  UnaryExpression() ( ( <PLUS> | <MINUS> ) UnaryExpression() )*
+}
+
+void UnaryExpression() :
+{}
+{
+    <MINUS> UnaryExpression()
+  | <NOT> UnaryExpression()
+  | PrimaryExpression()
+}
+
+void PrimaryExpression() :
+{}
+{
+    <INT>
+  | <LPAREN> Expression() <RPAREN>
+}
