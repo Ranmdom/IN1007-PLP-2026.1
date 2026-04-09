@@ -1,5 +1,6 @@
 # Experimento de Recursao a Esquerda Indireta
 
+
 Este experimento existe para reproduzir, de forma isolada, o problema conceitual descrito no projeto principal: uma gramatica de expressoes em que `Expression` pode derivar para `BinaryExpression`, e `BinaryExpression` volta a depender de `Expression` no lado esquerdo antes de consumir tokens suficientes.
 
 ## Objetivo
