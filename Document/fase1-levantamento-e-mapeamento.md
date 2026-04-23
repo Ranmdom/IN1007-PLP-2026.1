@@ -114,7 +114,7 @@ Codigo-fonte
 
 ## 5. Lacunas Tecnicas — O Que Precisa Ser Implementado
 
-### 5.1. Getters publicos ausentes (CRITICO)
+### 5.1. Getters publicos ausentes
 
 Os visitors precisam percorrer a AST lendo os campos internos de cada no. As seguintes classes tem campos `private` sem getter publico. Sem esses getters, nenhum visitor consegue funcionar.
 
