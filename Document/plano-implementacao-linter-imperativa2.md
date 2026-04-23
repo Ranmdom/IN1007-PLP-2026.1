@@ -123,26 +123,34 @@ Criterio de saida:
 ### Fase 2. Consolidacao da gramatica e da AST
 
 Objetivo:
-Garantir que a gramatica adaptada esteja correta e que a AST seja util para analise estatica.
+Corrigir as lacunas tecnicas identificadas na Fase 1 para que a gramatica adaptada trate precedencia corretamente e a AST seja util para analise estatica.
 
 Atividades:
 
 - revisar a BNF original e a versao fatorada
 - confirmar eliminacao da recursao a esquerda indireta
-- validar precedencia entre `==`, `+`, `-`, `or`, `++` e `and`
+- aplicar em `Imperative2.jj` a fatoracao em 3 niveis das expressoes binarias:
+  - `ExpBinaria  ::= ExpBinaria2 [ "==" ExpBinaria2 ]`
+  - `ExpBinaria2 ::= ExpBinaria3 { ("+" | "-" | "or" | "++") ExpBinaria3 }`
+  - `ExpBinaria3 ::= ExpUnaria { "and" ExpUnaria }`
+- corrigir operadores unarios gulosos (`-`, `not`, `length`) para chamarem `PExpPrimaria()` em vez de `PExpressao()`, evitando que `-x + 1` seja lido como `-(x + 1)`
+- validar precedencia com entradas como `1 + 2 == 3`, `true or false and true`, `-x + 1`
+- adicionar getters publicos ausentes nas classes listadas na Fase 1 secao 5.1 (`Programa`, `IfThenElse`, `While`, `Atribuicao`, `Write`, `Read`, `SequenciaComando`, `ComandoDeclaracao`, `ChamadaProcedimento`, `DeclaracaoComposta`)
+- tornar publicos os getters atualmente privados de `DeclaracaoProcedimento` (`getId`, `getDefProcedimento`)
 - verificar se a AST descarta simbolos da sintaxe concreta sem perda semantica
-- testar expressoes simples e compostas
-- validar blocos com declaracoes e chamadas de procedimento
+- testar blocos com declaracoes e chamadas de procedimento
 
 Entregaveis:
 
-- parser estavel
-- AST coerente com os conceitos da linguagem
-- conjunto inicial de entradas validas e invalidas
+- parser estavel com precedencia e associatividade corretas
+- AST com getters publicos suficientes para os visitors percorrerem a arvore
+- conjunto inicial de entradas validas e invalidas cobrindo expressoes de precedencia mista
 
 Criterio de saida:
 
-- o parser aceita os programas-alvo e gera estruturas adequadas para os visitors
+- o parser aceita os programas-alvo com a arvore correta para cada nivel de precedencia
+- toda classe da AST relevante ao linter expoe os filhos necessarios via getter publico
+- um visitor esqueleto consegue descer pela AST sem usar reflexao nem acessar campos privados
 
 ### Fase 3. Estruturacao da analise semantica
 
