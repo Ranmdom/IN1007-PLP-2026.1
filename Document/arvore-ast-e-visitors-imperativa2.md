@@ -134,6 +134,72 @@ Programa
 
 Essa e a arvore que qualquer visitor da analise semantica ou do linter vai percorrer.
 
+### 1.4. Mesma arvore em JSON
+
+A representacao em JSON a seguir serializa a mesma AST da Secao 1.3. Cada objeto usa o campo `no` com o nome da classe da AST e os demais campos correspondem exatamente aos atributos daquela classe. E util para inspecao manual, logs de debug do visitor e testes que comparam estruturas.
+
+```json
+{
+  "no": "Programa",
+  "comando": {
+    "no": "ComandoDeclaracao",
+    "declaracao": {
+      "no": "DeclaracaoComposta",
+      "d1": {
+        "no": "DeclaracaoVariavel",
+        "id": { "no": "Id", "nome": "x" },
+        "expressao": {
+          "no": "ExpSoma",
+          "esq": { "no": "ValorInteiro", "valor": 1 },
+          "dir": { "no": "ValorInteiro", "valor": 2 }
+        }
+      },
+      "d2": {
+        "no": "DeclaracaoProcedimento",
+        "nome": { "no": "Id", "nome": "dobro" },
+        "definicao": {
+          "no": "DefProcedimento",
+          "parametros": {
+            "no": "ListaDeclaracaoParametro",
+            "itens": [
+              {
+                "no": "DeclaracaoParametro",
+                "id": { "no": "Id", "nome": "n" },
+                "tipo": "TipoPrimitivo.INTEIRO"
+              }
+            ]
+          },
+          "corpo": {
+            "no": "Write",
+            "expressao": {
+              "no": "ExpSoma",
+              "esq": { "no": "Id", "nome": "n" },
+              "dir": { "no": "Id", "nome": "n" }
+            }
+          }
+        }
+      }
+    },
+    "comando": {
+      "no": "ChamadaProcedimento",
+      "nomeProcedimento": { "no": "Id", "nome": "dobro" },
+      "parametrosAtuais": {
+        "no": "ListaExpressao",
+        "itens": [
+          { "no": "Id", "nome": "x" }
+        ]
+      }
+    }
+  }
+}
+```
+
+Observacoes sobre a serializacao:
+
+- `ListaDeclaracaoParametro` e `ListaExpressao` sao listas encadeadas na AST real, mas foram achatadas em arrays (`itens`) para facilitar a leitura
+- `TipoPrimitivo` aparece como string porque e um valor sentinela (enum-like), nao um no de AST
+- nenhuma informacao de posicao (linha/coluna) foi incluida, mas a mesma estrutura suporta um campo opcional `posicao` se o parser vier a propagar esse dado para os diagnosticos
+
 ## 2. Tabela de Simbolos
 
 A tabela de simbolos na base atual e implementada como pilha de `HashMap<Id, T>` dentro do pacote `expressions2/memory`. O tipo `T` muda conforme o estagio:
