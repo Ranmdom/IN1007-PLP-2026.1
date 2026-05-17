@@ -62,4 +62,8 @@ public class Read implements IO {
 		return true;
 	}
 
+	public Id getId() {
+		return id;
+	}
+
 }

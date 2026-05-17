@@ -45,4 +45,8 @@ public class Write implements IO {
 		return expressao.checaTipo(ambiente);
 	}
 
+	public Expressao getExpressao() {
+		return expressao;
+	}
+
 }

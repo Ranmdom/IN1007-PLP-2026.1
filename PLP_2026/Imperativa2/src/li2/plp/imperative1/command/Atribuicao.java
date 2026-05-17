@@ -54,4 +54,12 @@ public class Atribuicao implements Comando {
 				&& id.getTipo(ambiente).eIgual(expressao.getTipo(ambiente));
 	}
 
+	public Id getId() {
+		return id;
+	}
+
+	public Expressao getExpressao() {
+		return expressao;
+	}
+
 }

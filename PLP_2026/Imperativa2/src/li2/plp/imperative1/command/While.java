@@ -58,4 +58,12 @@ public class While implements Comando {
 				&& comando.checaTipo(ambiente);
 	}
 
+	public Expressao getExpressao() {
+		return expressao;
+	}
+
+	public Comando getComando() {
+		return comando;
+	}
+
 }

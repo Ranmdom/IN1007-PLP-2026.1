@@ -94,4 +94,12 @@ public class ChamadaProcedimento implements Comando {
 
 	}
 
+	public Id getNomeProcedimento() {
+		return nomeProcedimento;
+	}
+
+	public ListaExpressao getParametrosReais() {
+		return parametrosReais;
+	}
+
 }

@@ -55,4 +55,12 @@ public class ComandoDeclaracao implements Comando {
 		return resposta;
 	}
 
+	public Declaracao getDeclaracao() {
+		return declaracao;
+	}
+
+	public Comando getComando() {
+		return comando;
+	}
+
 }

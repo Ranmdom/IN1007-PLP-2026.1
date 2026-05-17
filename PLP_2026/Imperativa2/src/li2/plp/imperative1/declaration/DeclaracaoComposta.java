@@ -32,4 +32,12 @@ public class DeclaracaoComposta extends Declaracao {
 		return declaracao1.checaTipo(ambiente)
 				&& declaracao2.checaTipo(ambiente);
 	}
+
+	public Declaracao getDeclaracao1() {
+		return declaracao1;
+	}
+
+	public Declaracao getDeclaracao2() {
+		return declaracao2;
+	}
 }

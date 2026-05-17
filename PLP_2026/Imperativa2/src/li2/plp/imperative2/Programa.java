@@ -57,4 +57,8 @@ public class Programa {
 		return comando.checaTipo(ambiente);
 	}
 
+	public Comando getComando() {
+		return comando;
+	}
+
 }

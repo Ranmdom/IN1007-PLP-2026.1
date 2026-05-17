@@ -63,4 +63,16 @@ public class IfThenElse implements Comando {
 				&& comandoElse.checaTipo(ambiente);
 	}
 
+	public Expressao getExpressao() {
+		return expressao;
+	}
+
+	public Comando getComandoThen() {
+		return comandoThen;
+	}
+
+	public Comando getComandoElse() {
+		return comandoElse;
+	}
+
 }

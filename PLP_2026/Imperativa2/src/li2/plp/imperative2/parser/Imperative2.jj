@@ -445,12 +445,103 @@ Valor PValor() :
 	}
 }
 
+/*
+ * Gramatica de expressoes fatorada em 3 niveis de precedencia.
+ * Precedencia (do menos para o mais forte):
+ *   nivel 1: ==
+ *   nivel 2: + - or ++
+ *   nivel 3: and
+ *   nivel 4: operadores unarios (- not length) e primarias
+ *
+ * Associatividade dos niveis 2 e 3: a esquerda (montada via loop com acumulador).
+ * Associatividade do nivel 1 (==): nao associativa (apenas um == permitido).
+ *
+ * Os operadores unarios chamam PExpPrimaria() em vez de PExpressao() para
+ * impedir o comportamento "guloso" antigo, onde '-x + 1' era lido como '-(x + 1)'.
+ */
+
+Expressao PExpressao() :
+{
+	Expressao retorno;
+}
+{
+	retorno = PExpBinaria()
+	{
+		return retorno;
+	}
+}
+
+Expressao PExpBinaria() :
+{
+	Expressao esq;
+	Expressao dir;
+}
+{
+	esq = PExpBinaria2()
+	[
+		<EQ> dir = PExpBinaria2()
+		{ esq = new ExpEquals(esq, dir); }
+	]
+	{
+		return esq;
+	}
+}
+
+Expressao PExpBinaria2() :
+{
+	Expressao acc;
+	Expressao dir;
+}
+{
+	acc = PExpBinaria3()
+	(
+		  <PLUS>   dir = PExpBinaria3() { acc = new ExpSoma(acc, dir); }
+		| <MINUS>  dir = PExpBinaria3() { acc = new ExpSub(acc, dir); }
+		| <OR>     dir = PExpBinaria3() { acc = new ExpOr(acc, dir); }
+		| <CONCAT> dir = PExpBinaria3() { acc = new ExpConcat(acc, dir); }
+	)*
+	{
+		return acc;
+	}
+}
+
+Expressao PExpBinaria3() :
+{
+	Expressao acc;
+	Expressao dir;
+}
+{
+	acc = PExpUnaria()
+	(
+		<AND> dir = PExpUnaria() { acc = new ExpAnd(acc, dir); }
+	)*
+	{
+		return acc;
+	}
+}
+
+Expressao PExpUnaria() :
+{
+	Expressao retorno;
+}
+{
+	(
+		  retorno = PExpMenos()
+		| retorno = PExpNot()
+		| retorno = PExpLength()
+		| retorno = PExpPrimaria()
+	)
+	{
+		return retorno;
+	}
+}
+
 Expressao PExpMenos() :
 {
 	Expressao retorno;
 }
 {
-	<MINUS> retorno = PExpressao()
+	<MINUS> retorno = PExpPrimaria()
 	{
 		return new ExpMenos(retorno);
 	}
@@ -461,7 +552,7 @@ Expressao PExpNot() :
 	Expressao retorno;
 }
 {
-	<NOT> retorno = PExpressao()
+	<NOT> retorno = PExpPrimaria()
 	{
 		return new ExpNot(retorno);
 	}
@@ -472,7 +563,7 @@ Expressao PExpLength() :
 	Expressao retorno;
 }
 {
-	<LENGTH> retorno = PExpressao()
+	<LENGTH> retorno = PExpPrimaria()
 	{
 		return new ExpLength(retorno);
 	}
@@ -483,145 +574,10 @@ Expressao PExpPrimaria() :
     Expressao retorno;
 }
 {
-	(  
+	(
 	    retorno = PId()
-	  | retorno = PValor() 
+	  | retorno = PValor()
 	  | <LPAREN> retorno = PExpressao() <RPAREN>
-	)
-	{
-		return retorno; 
-	}
-}
-
-
-Expressao PExpUnaria() :
-{
-	Expressao retorno;
-}
-{
-	(
-	  retorno = PExpMenos()
-	|
-	  retorno = PExpNot() 
-	| 
-	  retorno = PExpLength()
-	)
-	{
-		return retorno;
-	}
-}
-
-Expressao PExpBinaria() :
-{
-	Expressao retorno, param2;
-}
-{
-	(
-		  LOOKAHEAD (PExpPrimaria() <CONCAT> )
-		  	retorno = PExpConcat()
-		| LOOKAHEAD (PExpPrimaria() <MINUS>)
-			retorno = PExpSub()
-		| LOOKAHEAD (PExpPrimaria() <AND>)
-			retorno = PExpAnd()
-		| LOOKAHEAD (PExpPrimaria() <OR>)
-			retorno = PExpOr()
-		| LOOKAHEAD (PExpPrimaria() <EQ>)
-			retorno = PExpEquals()
-		| LOOKAHEAD (PExpPrimaria() <PLUS>)
-			retorno = PExpSoma()
-	)
-	{
-		return retorno;
-	}
-}
-
-ExpSoma PExpSoma() :
-{
-	Expressao esq;
-	Expressao dir;
-}
-{
-	esq = PExpPrimaria()
-	<PLUS>
-	dir = PExpressao()
-	{return new ExpSoma(esq, dir);}
-}
-
-ExpSub PExpSub() :
-{
-	Expressao esq;
-	Expressao dir;
-}
-{
-	esq = PExpPrimaria()
-	<MINUS>
-	dir = PExpressao()
-	{return new ExpSub(esq, dir);}
-}
-
-
-ExpAnd PExpAnd() :
-{
-	Expressao esq;
-	Expressao dir;
-}
-{
-	esq = PExpPrimaria()
-	<AND>
-	dir = PExpressao()
-	{return new ExpAnd(esq, dir);}
-}
-
-
-ExpOr PExpOr() :
-{
-	Expressao esq;
-	Expressao dir;
-}
-{
-	esq = PExpPrimaria()
-	<OR>
-	dir = PExpressao()
-	{return new ExpOr(esq, dir);}
-}
-
-ExpEquals PExpEquals() :
-{
-	Expressao esq;
-	Expressao dir;
-}
-{
-	esq = PExpPrimaria()
-	<EQ>
-	dir = PExpressao()
-	{return new ExpEquals(esq, dir);}
-}
-
-
-ExpConcat PExpConcat() :
-{
-	Expressao esq;
-	Expressao dir;
-}
-{
-	esq = PExpPrimaria()
-	<CONCAT>
-	dir = PExpressao()
-	{return new ExpConcat(esq, dir);}
-}
-
-Expressao PExpressao() :
-{
-	Expressao retorno;
-}
-{
-	(
-	    LOOKAHEAD (2) 
-	  		retorno = PExpUnaria()
-	  | LOOKAHEAD (PExpPrimaria() (<OR> | <AND> | <MINUS> | <PLUS> | <EQ> | <CONCAT>)) 
-	  		retorno = PExpBinaria()
-	  |
-	    retorno = PExpPrimaria()
 	)
 	{
 		return retorno;

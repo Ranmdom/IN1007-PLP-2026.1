@@ -30,7 +30,7 @@ public class DeclaracaoProcedimento extends Declaracao {
 		return ambiente;
 	}
 
-	private Id getId() {
+	public Id getId() {
 		return this.id;
 	}
 
@@ -55,7 +55,7 @@ public class DeclaracaoProcedimento extends Declaracao {
 		return resposta;
 	}
 
-	private DefProcedimento getDefProcedimento() {
+	public DefProcedimento getDefProcedimento() {
 		return this.defProcedimento;
 	}
 }

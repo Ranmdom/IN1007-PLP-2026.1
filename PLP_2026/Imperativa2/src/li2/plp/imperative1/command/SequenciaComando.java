@@ -47,4 +47,12 @@ public class SequenciaComando implements Comando {
 			IdentificadorNaoDeclaradoException, EntradaVaziaException {
 		return comando1.checaTipo(ambiente) && comando2.checaTipo(ambiente);
 	}
+
+	public Comando getComando1() {
+		return comando1;
+	}
+
+	public Comando getComando2() {
+		return comando2;
+	}
 }

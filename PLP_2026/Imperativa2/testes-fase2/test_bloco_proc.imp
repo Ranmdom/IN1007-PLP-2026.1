@@ -1,0 +1,1 @@
+{ proc dobra(int x) { write(x + x) } ; call dobra(5) }
