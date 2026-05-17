@@ -1,0 +1,4 @@
+{
+   proc soma(int x, int y) { write(x + y) } ;
+   call soma(1, true)
+}

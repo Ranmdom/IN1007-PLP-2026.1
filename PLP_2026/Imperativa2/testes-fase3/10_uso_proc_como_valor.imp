@@ -1,0 +1,4 @@
+{
+   proc p() { write(1) } ;
+   write(p + 1)
+}

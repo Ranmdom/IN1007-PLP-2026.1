@@ -1,0 +1,7 @@
+{
+   var x = 1 ;
+   {
+      var x = true ;
+      if x then write(10) else write(20)
+   }
+}

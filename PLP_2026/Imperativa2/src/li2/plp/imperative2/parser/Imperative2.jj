@@ -16,6 +16,7 @@ import li2.plp.imperative2.*;
 import li2.plp.imperative2.command.*;
 import li2.plp.imperative2.declaration.*;
 import li2.plp.imperative2.memory.*;
+import li2.plp.imperative2.semantica.*;
 import java.util.*;
 
 public class Imp2Parser {
@@ -62,7 +63,19 @@ public class Imp2Parser {
 	    try {
             Programa programa = parser.Input();
             System.out.println("Imperativa 2 PLP Parser Version 0.0.1:  Imperativa2 program parsed successfully.");
-            
+
+            VisitorSemantico semantico = new VisitorSemantico();
+            List<ErroSemantico> errosSemanticos = semantico.analisar(programa);
+            if (!errosSemanticos.isEmpty()) {
+                System.out.println("==== ERROS SEMANTICOS ====");
+                for (ErroSemantico erro : errosSemanticos) {
+                    System.out.println(erro);
+                }
+                System.out.println("Total: " + errosSemanticos.size() + " erro(s) semantico(s). Execucao abortada.");
+                return;
+            }
+            System.out.println("Analise semantica: ok.");
+
             if(programa.checaTipo(new ContextoCompilacaoImperativa(entrada))) {
                 ListaValor saida = programa.executar(new ContextoExecucaoImperativa2(entrada));
                 System.out.println(saida);
