@@ -1,0 +1,10 @@
+package li2.plp.imperative2.linter;
+
+public enum AvisoCodigo {
+    VAR_NAO_UTILIZADA,
+    PARAM_NAO_UTILIZADO,
+    CODIGO_MORTO_RAMO_THEN,
+    CODIGO_MORTO_RAMO_ELSE,
+    CODIGO_MORTO_WHILE,
+    COMPLEXIDADE_PROCEDIMENTO
+}

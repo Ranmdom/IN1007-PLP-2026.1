@@ -1,0 +1,3 @@
+{
+  if false then write(1) else write(0)
+}

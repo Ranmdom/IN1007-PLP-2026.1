@@ -1,0 +1,4 @@
+{
+  var b = true;
+  if b then write(1) else write(0)
+}
