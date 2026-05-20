@@ -17,6 +17,7 @@ import li2.plp.imperative2.command.*;
 import li2.plp.imperative2.declaration.*;
 import li2.plp.imperative2.memory.*;
 import li2.plp.imperative2.semantica.*;
+import li2.plp.imperative2.linter.*;
 import java.util.*;
 
 public class Imp2Parser {
@@ -75,6 +76,15 @@ public class Imp2Parser {
                 return;
             }
             System.out.println("Analise semantica: ok.");
+
+            VisitorLinter linter = new VisitorLinter(semantico.getTabela());
+            List<AvisoLinter> avisos = linter.analisar(programa);
+            if (!avisos.isEmpty()) {
+                System.out.println("==== AVISOS DO LINTER ====");
+                for (AvisoLinter aviso : avisos) {
+                    System.out.println(aviso);
+                }
+            }
 
             if(programa.checaTipo(new ContextoCompilacaoImperativa(entrada))) {
                 ListaValor saida = programa.executar(new ContextoExecucaoImperativa2(entrada));
