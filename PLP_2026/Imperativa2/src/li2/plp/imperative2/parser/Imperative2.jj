@@ -75,8 +75,6 @@ public class Imp2Parser {
                 System.out.println("Total: " + errosSemanticos.size() + " erro(s) semantico(s). Execucao abortada.");
                 return;
             }
-            System.out.println("Analise semantica: ok.");
-
             VisitorLinter linter = new VisitorLinter(semantico.getTabela());
             List<AvisoLinter> avisos = linter.analisar(programa);
             if (!avisos.isEmpty()) {

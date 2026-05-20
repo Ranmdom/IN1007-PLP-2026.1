@@ -1,0 +1,4 @@
+{
+  proc saudacao(int n) { write(0) } ;
+  call saudacao(1)
+}

@@ -1,9 +1,12 @@
 {
-  proc noLimite() {
+  var naoUsada = 0,
+  proc muitoComplexo() {
+    if true then skip else skip;
     if true then skip else skip;
     if true then skip else skip;
     if true then skip else skip;
     if true then skip else skip
   } ;
-  call noLimite()
+  if true then write(1) else write(2);
+  call muitoComplexo()
 }
