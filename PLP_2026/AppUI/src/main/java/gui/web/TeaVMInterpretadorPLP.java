@@ -30,6 +30,10 @@ public class TeaVMInterpretadorPLP {
             entrada.setDisabled(index <= 3);
         });
 
+        codigo.addEventListener("blur", evt -> {
+            interpreter.analisarLinter(codigo.getValue(), linguagens.getSelectedIndex());
+        });
+
         btn.addEventListener("click", evt -> {
             String src = codigo.getValue();
             String input = entrada.getValue();

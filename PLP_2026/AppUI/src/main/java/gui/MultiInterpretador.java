@@ -21,6 +21,10 @@ import li1.plp.imperative1.memory.ContextoExecucaoImperativa;
 import li1.plp.imperative1.parser.Imp1Parser;
 import li2.plp.imperative2.memory.ContextoExecucaoImperativa2;
 import li2.plp.imperative2.parser.Imp2Parser;
+import li2.plp.imperative2.semantica.ErroSemantico;
+import li2.plp.imperative2.semantica.VisitorSemantico;
+import li2.plp.imperative2.linter.AvisoLinter;
+import li2.plp.imperative2.linter.VisitorLinter;
 //import loo1.plp.orientadaObjetos1.expressao.valor.ValorConcreto;
 import loo1.plp.orientadaObjetos1.parser.OO1Parser;
 import loo2.plp.orientadaObjetos2.parser.OO2Parser;
@@ -57,6 +61,50 @@ public class MultiInterpretador {
 	public MultiInterpretador(MessageBoard textAreaMensagens) {
 		super();
 		messageBoard = textAreaMensagens;
+	}
+
+	public void analisarLinter(String sourceCode, int selectedIndex) {
+		if (selectedIndex != IMP2) return;
+		if (sourceCode.trim().isEmpty()) { messageBoard.setText(""); return; }
+		try {
+			ByteArrayInputStream fis = new ByteArrayInputStream(sourceCode.getBytes());
+			analisarLinterImp2(fis);
+		} catch (Exception e) {
+			messageBoard.setText("Erro de sintaxe: " + e.getMessage());
+		} catch (Throwable t) {
+			messageBoard.setText(t.getMessage());
+		}
+	}
+
+	private void analisarLinterImp2(InputStream fis) throws Exception {
+		li2.plp.imperative2.Programa prog;
+		if (imp2Parser == null) {
+			imp2Parser = new Imp2Parser(fis);
+		} else {
+			Imp2Parser.ReInit(fis);
+		}
+		prog = Imp2Parser.Input();
+
+		VisitorSemantico semantico = new VisitorSemantico();
+		List<ErroSemantico> erros = semantico.analisar(prog);
+		if (!erros.isEmpty()) {
+			messageBoard.setText("==== ERROS SEMANTICOS ====\n");
+			for (ErroSemantico erro : erros) {
+				messageBoard.append(erro.toString() + "\n");
+			}
+			return;
+		}
+
+		VisitorLinter linter = new VisitorLinter(semantico.getTabela());
+		List<AvisoLinter> avisos = linter.analisar(prog);
+		if (avisos.isEmpty()) {
+			messageBoard.setText("sem avisos.");
+		} else {
+			messageBoard.setText("==== AVISOS DO LINTER ====\n");
+			for (AvisoLinter aviso : avisos) {
+				messageBoard.append(aviso.toString() + "\n");
+			}
+		}
 	}
 
 	public void interpretarCodigo(String sourceCode, String listaEntrada,
@@ -212,8 +260,27 @@ public class MultiInterpretador {
 		}
 
 		prog = Imp2Parser.Input();
-
 		messageBoard.setText("sintaxe verificada com sucesso!\n");
+
+		VisitorSemantico semantico = new VisitorSemantico();
+		List<ErroSemantico> erros = semantico.analisar(prog);
+		if (!erros.isEmpty()) {
+			messageBoard.append("==== ERROS SEMANTICOS ====\n");
+			for (ErroSemantico erro : erros) {
+				messageBoard.append(erro.toString() + "\n");
+			}
+			return;
+		}
+
+		VisitorLinter linter = new VisitorLinter(semantico.getTabela());
+		List<AvisoLinter> avisos = linter.analisar(prog);
+		if (!avisos.isEmpty()) {
+			messageBoard.append("==== AVISOS DO LINTER ====\n");
+			for (AvisoLinter aviso : avisos) {
+				messageBoard.append(aviso.toString() + "\n");
+			}
+		}
+
 		li2.plp.imperative1.memory.ListaValor entrada = obterListaEntradaImp2(entradaStr);
 		if (prog.checaTipo(new li2.plp.imperative1.memory.ContextoCompilacaoImperativa(entrada))) {
 			messageBoard.append("resultado = "
