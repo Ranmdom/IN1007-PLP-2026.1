@@ -21,9 +21,14 @@ import li2.plp.imperative2.semantica.TabelaSimbolos;
 
 public class VisitorLinter {
 
+    private static final int LIMIAR_COMPLEXIDADE = 4;
+
     private final TabelaSimbolos tabela;
     private final AvaliadorConstante avaliador = new AvaliadorConstante();
     private final List<AvisoLinter> avisos = new ArrayList<>();
+
+    private String procedimentoAtual = null;
+    private int complexidade = 0;
 
     public VisitorLinter(TabelaSimbolos tabela) {
         this.tabela = tabela;
@@ -79,13 +84,16 @@ public class VisitorLinter {
             visitarDeclaracao(dc.getDeclaracao1());
             visitarDeclaracao(dc.getDeclaracao2());
         } else if (d instanceof DeclaracaoProcedimento) {
-            visitarComando(((DeclaracaoProcedimento) d).getDefProcedimento().getComando());
+            visitarDeclaracaoProcedimento((DeclaracaoProcedimento) d);
         }
     }
 
     // ---- Regra 2: codigo morto ----
 
     private void visitarIfThenElse(IfThenElse c) {
+        if (procedimentoAtual != null) {
+            complexidade++;
+        }
         Expressao cond = c.getExpressao();
         Boolean valor = avaliador.avaliar(cond);
         if (Boolean.TRUE.equals(valor)) {
@@ -100,11 +108,36 @@ public class VisitorLinter {
     }
 
     private void visitarWhile(While c) {
+        if (procedimentoAtual != null) {
+            complexidade++;
+        }
         Boolean valor = avaliador.avaliar(c.getExpressao());
         if (Boolean.FALSE.equals(valor)) {
             avisos.add(new AvisoLinter(AvisoCodigo.CODIGO_MORTO_WHILE,
                     "corpo do 'while' inalcancavel porque a condicao e sempre 'false'"));
         }
         visitarComando(c.getComando());
+    }
+
+    // ---- Regra 3: complexidade de procedimento ----
+
+    private void visitarDeclaracaoProcedimento(DeclaracaoProcedimento dp) {
+        String nomeProcAnterior = procedimentoAtual;
+        int complexidadeAnterior = complexidade;
+
+        procedimentoAtual = dp.getId().getIdName();
+        complexidade = 0;
+
+        visitarComando(dp.getDefProcedimento().getComando());
+
+        if (complexidade > LIMIAR_COMPLEXIDADE) {
+            avisos.add(new AvisoLinter(
+                    AvisoCodigo.COMPLEXIDADE_PROCEDIMENTO,
+                    "complexidade " + complexidade + " ultrapassa o limite de " + LIMIAR_COMPLEXIDADE,
+                    procedimentoAtual));
+        }
+
+        procedimentoAtual = nomeProcAnterior;
+        complexidade = complexidadeAnterior;
     }
 }
