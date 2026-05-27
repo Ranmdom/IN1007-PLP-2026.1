@@ -12,9 +12,20 @@ public class DeclaracaoParametro {
 
 	private Tipo tipo;
 
+	private int linha;
+
 	public DeclaracaoParametro(Id id, Tipo tipo) {
+		this(id, tipo, -1);
+	}
+
+	public DeclaracaoParametro(Id id, Tipo tipo, int linha) {
 		this.id = id;
 		this.tipo = tipo;
+		this.linha = linha;
+	}
+
+	public int getLinha() {
+		return linha;
 	}
 
 	public Id getId() {

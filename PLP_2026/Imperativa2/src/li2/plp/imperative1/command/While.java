@@ -15,9 +15,20 @@ public class While implements Comando {
 
 	private Comando comando;
 
+	private int linha;
+
 	public While(Expressao expressao, Comando comando) {
+		this(expressao, comando, -1);
+	}
+
+	public While(Expressao expressao, Comando comando, int linha) {
 		this.expressao = expressao;
 		this.comando = comando;
+		this.linha = linha;
+	}
+
+	public int getLinha() {
+		return linha;
 	}
 
 	/**

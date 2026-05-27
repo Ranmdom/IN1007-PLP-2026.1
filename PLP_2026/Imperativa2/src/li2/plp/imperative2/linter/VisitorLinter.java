@@ -50,11 +50,13 @@ public class VisitorLinter {
                 if (s.getKind() == SimboloKind.VARIAVEL && s.getLido() == 0) {
                     avisos.add(new AvisoLinter(
                             AvisoCodigo.VAR_NAO_UTILIZADA,
-                            "variavel '" + s.getNome() + "' declarada mas nunca lida"));
+                            "variavel '" + s.getNome() + "' declarada mas nunca lida",
+                            null, s.getLinha()));
                 } else if (s.getKind() == SimboloKind.PARAMETRO && s.getLido() == 0) {
                     avisos.add(new AvisoLinter(
                             AvisoCodigo.PARAM_NAO_UTILIZADO,
-                            "parametro '" + s.getNome() + "' declarado mas nunca lido"));
+                            "parametro '" + s.getNome() + "' declarado mas nunca lido",
+                            null, s.getLinha()));
                 }
             }
         }
@@ -98,10 +100,12 @@ public class VisitorLinter {
         Boolean valor = avaliador.avaliar(cond);
         if (Boolean.TRUE.equals(valor)) {
             avisos.add(new AvisoLinter(AvisoCodigo.CODIGO_MORTO_RAMO_ELSE,
-                    "ramo 'else' inalcancavel porque a condicao e sempre 'true'"));
+                    "ramo 'else' inalcancavel porque a condicao e sempre 'true'",
+                    null, c.getLinha()));
         } else if (Boolean.FALSE.equals(valor)) {
             avisos.add(new AvisoLinter(AvisoCodigo.CODIGO_MORTO_RAMO_THEN,
-                    "ramo 'then' inalcancavel porque a condicao e sempre 'false'"));
+                    "ramo 'then' inalcancavel porque a condicao e sempre 'false'",
+                    null, c.getLinha()));
         }
         visitarComando(c.getComandoThen());
         visitarComando(c.getComandoElse());
@@ -114,7 +118,8 @@ public class VisitorLinter {
         Boolean valor = avaliador.avaliar(c.getExpressao());
         if (Boolean.FALSE.equals(valor)) {
             avisos.add(new AvisoLinter(AvisoCodigo.CODIGO_MORTO_WHILE,
-                    "corpo do 'while' inalcancavel porque a condicao e sempre 'false'"));
+                    "corpo do 'while' inalcancavel porque a condicao e sempre 'false'",
+                    null, c.getLinha()));
         }
         visitarComando(c.getComando());
     }
@@ -133,8 +138,8 @@ public class VisitorLinter {
         if (complexidade > LIMIAR_COMPLEXIDADE) {
             avisos.add(new AvisoLinter(
                     AvisoCodigo.COMPLEXIDADE_PROCEDIMENTO,
-                    "complexidade " + complexidade + " ultrapassa o limite de " + LIMIAR_COMPLEXIDADE,
-                    procedimentoAtual));
+                    "complexidade ciclomatica " + complexidade + " ultrapassa o limite de " + LIMIAR_COMPLEXIDADE,
+                    procedimentoAtual, dp.getLinha()));
         }
 
         procedimentoAtual = nomeProcAnterior;

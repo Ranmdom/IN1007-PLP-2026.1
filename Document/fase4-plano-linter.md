@@ -46,7 +46,7 @@ Pacote novo: `li2.plp.imperative2.linter`
 | `AvaliadorConstante` | helper que determina se uma expressao booleana e constante em tempo de compilacao |
 | `VisitorLinter` | visitor principal: percorre AST e acumula a lista de avisos |
 
-Nenhum arquivo existente da AST, do parser ou da Fase 3 precisa ser alterado.
+**Nota:** a adicao de numeros de linha exigiu modificar varios arquivos existentes (ver secao 1.4).
 
 ## 2. Codigos de Aviso
 

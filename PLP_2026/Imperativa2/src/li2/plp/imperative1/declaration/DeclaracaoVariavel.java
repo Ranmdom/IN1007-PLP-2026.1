@@ -11,11 +11,21 @@ public class DeclaracaoVariavel extends Declaracao {
 
 	private Id id;
 	private Expressao expressao;
+	private int linha;
 
 	public DeclaracaoVariavel(Id id, Expressao expressao) {
+		this(id, expressao, -1);
+	}
+
+	public DeclaracaoVariavel(Id id, Expressao expressao, int linha) {
 		super();
 		this.id = id;
 		this.expressao = expressao;
+		this.linha = linha;
+	}
+
+	public int getLinha() {
+		return linha;
 	}
 
 	/**
