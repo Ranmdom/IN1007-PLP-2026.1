@@ -28,10 +28,12 @@ Arquivo: [PLP_2026/Imperativa2/src/li2/plp/imperative2/parser/Imperative2.jj](..
 
 Na versao antiga, todos os operadores binarios estavam no mesmo nivel e cada producao binaria era `PExpPrimaria() OP PExpressao()` (recursao a direita), com `PExpressao()` escolhendo entre `PExpUnaria`, `PExpBinaria` e `PExpPrimaria` via `LOOKAHEAD` sintatico. Consequencias observadas em Fase 1:
 
-- `1 + 2 == 3` virava `1 + (2 == 3)` (erro de tipo, soma `int` com `boolean`).
-- `true or false and true` nao respeitava que `and` tem precedencia maior que `or`.
-- `1 - 2 - 3` virava `1 - (2 - 3)` (right-assoc) em vez de `(1 - 2) - 3`.
-- Os unarios `-`, `not`, `length` chamavam `PExpressao()`, entao `-x + 1` virava `-(x + 1)`.
+- `1 + 2 == 3` virava `1 + (2 == 3)` (erro de tipo, soma `int` com `boolean`); um programa valido era rejeitado pelo parser.
+- `false and true or true` virava `false and (true or true)` em vez de `(false and true) or true`, ignorando que `and` tem precedencia maior que `or` (resultado `false` em vez do correto `true`).
+- `1 - 2 - 3` virava `1 - (2 - 3)` (right-assoc) em vez de `(1 - 2) - 3` (resultado `2` em vez do correto `-4`).
+- Os unarios `-`, `not`, `length` chamavam `PExpressao()`, entao `-1 + 2` virava `-(1 + 2)` (resultado `-3` em vez do correto `1`).
+
+Observacao: o efeito de precedencia `and`/`or` so aparece quando o `and` vem antes do `or` na fonte. Em `true or false and true` a versao antiga, por acaso, produzia a arvore correta — por isso esse caso nao serve como exemplo do defeito. O caso que expoe o problema e `false and true or true`. Todos os casos acima foram verificados executando a gramatica antiga (commit anterior a Fase 2) e a nova; ver `experiments/demo-fase2/`.
 
 ### 2.2. Nova gramatica de expressoes
 
@@ -125,7 +127,7 @@ Foram criados em [PLP_2026/Imperativa2/testes-fase2/](../PLP_2026/Imperativa2/te
 | `test_sub_left_assoc.imp` | `write(1 - 2 - 3)` | `-4` | `(1-2)-3 = -4` | confirma left-assoc; antes da Fase 2 retornava `2` |
 | `test_unary_minus_sum.imp` | `write(-1 + 2)` | `1` | `(-1)+2 = 1` | confirma unario nao-guloso; antes retornava `-3` |
 | `test_eq_after_sum.imp` | `write(1 + 2 == 3)` | `true` | `(1+2)==3 = true` | antes dava erro de tipo (`int + boolean`) |
-| `test_or_and.imp` | `write(true or false and false)` | `true` | `true or (false and false) = true` | `and` ligando mais forte que `or` |
+| `test_or_and.imp` | `write(false and true or true)` | `true` | `(false and true) or true = true` | `and` liga mais forte que `or`; antes da Fase 2 retornava `false` |
 | `test_bloco_var.imp` | `{ var x = 10 ; write(x + 1) }` | `11` | `11` | bloco com declaracao de variavel |
 | `test_bloco_proc.imp` | `{ proc dobra(int x) { write(x + x) } ; call dobra(5) }` | `10` | `10` | bloco com declaracao e chamada de procedimento |
 
