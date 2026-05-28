@@ -14,7 +14,7 @@
 
 - Partimos de uma base que já interpretava a Imperativa 2.
 - A ideia foi *parar de só executar* e começar a **olhar pro código**: validar regras, apontar problemas, sugerir melhorias.
-- Hoje eu apresento as três fases já concluídas — levantamento, gramática/AST e análise semântica. A quarta (o linter) já está em andamento em cima dessa base.
+- Hoje eu apresento as três fases já concluídas — levantamento, preparação da AST e análise semântica. A quarta (o linter) já está em andamento em cima dessa base.
 
 *(sem código nesse slide — capa)*
 
@@ -74,7 +74,7 @@ Relatório de erros e avisos
 
 - O parser `Imperative2.jj` constrói tudo a partir da classe raiz `Programa`.
 - A AST já tinha nó pra praticamente toda a linguagem — comandos (`If`, `While`, `Atribuicao`, `Write`, `Read`, `Sequencia`, `ComandoDeclaracao`, `ChamadaProcedimento`), declarações (variável, composta, procedimento) e expressões.
-- O controle de escopo já existia em `Contexto<T>` — uma pilha de `HashMap`. Mas era pensado pra execução, não pra análise estática.
+- O controle de escopo já vinha pronto em `Contexto<T>` — uma pilha de `HashMap` que atende muito bem o lado da execução. Pra análise estática, a gente ia complementar com uma estrutura própria.
 
 **Código (lado direito):**
 
@@ -92,134 +92,62 @@ expressions2/memory/Contexto.java   ← escopo legado (pilha de HashMap)
 
 ---
 
-## Slide 5 — Fase 1: As Lacunas
+## Slide 5 — Fase 1: Pontos de Extensão e Decisão de Arquitetura
 
-**Título:** Fase 1 — O Que Precisava Ser Resolvido
+**Título:** Fase 1 — O Que Iríamos Acrescentar
 
 **Falar:**
 
-- Três obstáculos concretos pra avançar:
-  1. **AST opaca** — os campos eram `private` sem getter. Nenhum visitor conseguia descer pela árvore.
-  2. **Parser sem precedência** — todos os operadores binários no mesmo nível, unários "gulosos".
-  3. **Sem infraestrutura de análise** — nem visitor, nem tabela de símbolos própria, nem classe de erro.
-- Decisão de arquitetura tomada aqui: o visitor seria feito por `instanceof`, não pelo padrão Visitor clássico com `accept()`. Isso evita ter que mexer em todas as classes da AST.
+- A base estava sólida pra o que ela se propunha — executar programas. Pra análise estática, a gente identificou três pontos onde ia precisar **estender**:
+  1. **Expor a AST aos visitors** — acrescentar getters nos nós pra que um percorredor consiga descer pela árvore.
+  2. **Criar a infraestrutura de análise** — visitor, tabela de símbolos própria e classe de erro semântico, tudo novo.
+  3. **Refinar a gramática de expressões** — consolidar a precedência e os unários pra que a árvore reflita diretamente a semântica pretendida.
+- **Decisão de arquitetura** tomada já nesta fase: o visitor seria implementado por **`instanceof`**, e não pelo padrão Visitor clássico com `accept()`.
+- Por quê? Porque o `accept()` exigiria mexer em **todas** as classes da AST. Como temos um número pequeno e fechado de tipos de nó, `instanceof` é mais simples, suficiente e isolado num único arquivo.
 
 **Código (lado direito):**
 
 ```java
-// Como estava: AST "fechada", visitor não passa
+// Ponto de extensão #1: expor os filhos pros visitors
 public class IfThenElse implements Comando {
-    private Expressao expressao;          // sem getter
-    private Comando comandoThen;          // sem getter
-    private Comando comandoElse;          // sem getter
+    private Expressao expressao;
+    private Comando comandoThen;
+    private Comando comandoElse;
 
     public AmbienteExecucaoImperativa executar(...) { ... }
     public boolean checaTipo(...) { ... }
-    // nada além de executar/checaTipo
+    // Fase 2 acrescenta getExpressao(), getComandoThen(), getComandoElse()
 }
 ```
 
 ---
 
-## Slide 6 — Fase 2: O Problema na Gramática
+## Slide 6 — Fase 2: Objetivo
 
-**Título:** Fase 2 — Precedência e Associatividade Quebradas
+**Título:** Fase 2 — Preparar a AST para a Análise
 
 **Falar:**
 
-- Na versão antiga, **todos os operadores binários ficavam no mesmo nível**, e a recursão era à direita.
-- Ou seja: o parser aceitava o programa, mas a árvore tinha o **significado errado**.
-- Exemplos do que dava errado:
-  - `1 + 2 == 3` virava `1 + (2 == 3)` — erro de tipo.
-  - `1 - 2 - 3` virava `1 - (2 - 3)` = `2`, em vez de `-4`.
-  - `-x + 1` virava `-(x + 1)` por causa do unário guloso.
-  - `or` e `and` no mesmo nível — sem distinguir prioridade.
+- A Fase 2 tem **um objetivo central**: deixar a AST pronta pra ser percorrida por visitors.
+- Em prática, isso quis dizer duas coisas:
+  1. **Expor os nós** — acrescentar getters pros visitors conseguirem descer pela árvore.
+  2. **Consolidar a gramática de expressões** — refinar a precedência e os unários pra que a árvore reflita diretamente a semântica pretendida.
+- A parte da exposição dos nós é o **coração** desta fase — é o que viabiliza tudo que vem na Fase 3. O ajuste de gramática foi um trabalho menor, mais pontual.
 
-**Código (lado direito):**
-
-```text
-Antes (mesmo nível, recursão à direita):
-
-  ExpBinaria ::= ExpUnaria [ OP ExpBinaria ]
-  OP         ::= + | - | == | or | and | ++
-
-Resultado da árvore para "1 + 2 == 3":
-
-        ==
-       /  \
-      1    +
-          / \
-         2   3       ← errado: tipo
-```
+*(sem código — slide de objetivo)*
 
 ---
 
-## Slide 7 — Fase 2: Gramática em 3 Níveis
-
-**Título:** Fase 2 — A Solução: Fatorar por Precedência
-
-**Falar:**
-
-- A gente reescreveu o trecho de expressões em **três níveis**: o mais fraco encosta no mais forte.
-- Cada nível só monta seu nó depois de resolver o nível mais forte — isso garante precedência.
-- Os níveis 2 e 3 usam **laço com acumulador** em vez de recursão à direita — assim a associatividade fica à esquerda.
-- Os unários (`-`, `not`, `length`) passaram a chamar **só a primária** à frente — acabou o "gulodice".
-
-**Código (lado direito — `Imperative2.jj`):**
-
-```javacc
-// nivel 1: ==  (não associativo)
-Expressao PExpBinaria() :
-{ Expressao esq; Expressao dir; }
-{
-    esq = PExpBinaria2()
-    [ <EQ> dir = PExpBinaria2()
-      { esq = new ExpEquals(esq, dir); } ]
-    { return esq; }
-}
-
-// nivel 2: + - or ++  (assoc. à esquerda via loop)
-Expressao PExpBinaria2() :
-{ Expressao acc; Expressao dir; }
-{
-    acc = PExpBinaria3()
-    (
-        <PLUS>  dir = PExpBinaria3() { acc = new ExpSoma(acc, dir); }
-      | <MINUS> dir = PExpBinaria3() { acc = new ExpSub(acc, dir); }
-      | <OR>    dir = PExpBinaria3() { acc = new ExpOr(acc, dir); }
-      | <CONCAT>dir = PExpBinaria3() { acc = new ExpConcat(acc, dir); }
-    )*
-    { return acc; }
-}
-
-// nivel 3: and  (assoc. à esquerda)
-Expressao PExpBinaria3() :
-{ Expressao acc; Expressao dir; }
-{
-    acc = PExpUnaria()
-    ( <AND> dir = PExpUnaria() { acc = new ExpAnd(acc, dir); } )*
-    { return acc; }
-}
-
-// nivel 4: unários chamam PRIMÁRIA, não PExpressao
-Expressao PExpMenos() :
-{ Expressao retorno; }
-{ <MINUS> retorno = PExpPrimaria()
-  { return new ExpMenos(retorno); } }
-```
-
----
-
-## Slide 8 — Fase 2: Abrindo a AST
+## Slide 7 — Fase 2: Abertura da AST
 
 **Título:** Fase 2 — AST Acessível aos Visitors
 
 **Falar:**
 
 - Pro visitor descer pela árvore, cada nó precisa **expor seus filhos**.
-- A gente adicionou getters públicos a **11 classes** da AST — todas que estavam fechadas.
-- As expressões já tinham getters — não precisaram ser tocadas.
-- Com isso, o visitor por `instanceof` consegue percorrer a árvore inteira sem reflexão e sem acessar campo privado.
+- A gente acrescentou getters públicos a **11 classes** da AST. As expressões já tinham getters, então foram aproveitadas como estavam.
+- Com isso, o visitor por `instanceof` consegue percorrer a árvore inteira **sem reflexão e sem acessar campo privado**.
+- É uma mudança simples no código, mas estratégica — é ela que viabiliza toda a análise da Fase 3.
 
 **Código (lado direito):**
 
@@ -253,29 +181,57 @@ public class IfThenElse implements Comando {
 
 ---
 
-## Slide 9 — Fase 2: Validação
+## Slide 8 — Fase 2: Consolidação da Gramática
 
-**Título:** Fase 2 — Testes de Precedência
+**Título:** Fase 2 — Consolidando a Gramática de Expressões
 
 **Falar:**
 
-- Sete programas curtos exercitando exatamente os casos que antes davam errado.
-- Os três últimos são os mais significativos — antes nem rodavam.
-- A árvore agora tem o **significado certo**.
+- Em paralelo à exposição da AST, a gente **consolidou** a gramática de expressões.
+- Em uma frase: a gramática foi **fatorada em níveis de precedência**, e os unários passaram a consumir só a primária à frente.
+- É um detalhe técnico do JavaCC — o que importa pra apresentação é o **efeito prático**: a árvore passa a refletir diretamente a semântica pretendida das expressões, então a análise semântica da Fase 3 pode confiar 100% no que recebe.
+- Foi um ajuste pontual, mas dá uma base muito mais firme pra todo o trabalho de análise que vem depois.
 
-**Código (lado direito):**
+**Código (lado direito — só pra ilustrar):**
+
+```javacc
+// Imperative2.jj — gramática fatorada em níveis
+// nivel 1: ==
+// nivel 2: + - or ++   (assoc. à esquerda)
+// nivel 3: and         (assoc. à esquerda)
+// nivel 4: unários e primárias
+
+Expressao PExpBinaria2() :
+{ Expressao acc; Expressao dir; }
+{
+    acc = PExpBinaria3()
+    ( <PLUS> dir = PExpBinaria3() { acc = new ExpSoma(acc, dir); }
+    | ... )*
+    { return acc; }
+}
+```
+
+---
+
+## Slide 9 — Fase 2: Validação
+
+**Título:** Fase 2 — Como Validamos
+
+**Falar:**
+
+- A exposição da AST foi validada de forma prática: a Fase 3 inteira só funciona porque o visitor consegue descer pela árvore. É a prova viva de que o contrato ficou completo.
+- A consolidação da gramática foi validada com programas curtos que exercitam os casos de precedência e associatividade — todos avaliam para o resultado esperado.
+- O ponto: depois da Fase 2, a árvore está **acessível e consistente** — pré-requisito pra tudo que vem a seguir.
+
+**Código (lado direito — só pra dar a ideia):**
 
 ```text
-Entrada                       | Saída  | Comprova
-------------------------------+--------+-------------------------
-1 + 2 + 3                     |    6   | soma associativa
-1 - 2 - 3                     |   -4   | assoc. à esquerda
-                              |        | (antes dava 2)
--1 + 2                        |    1   | unário não-guloso
-                              |        | (antes dava -3)
-1 + 2 == 3                    |  true  | == aplicado por último
-                              |        | (antes: erro de tipo)
-true or false and false       |  true  | and tem prioridade > or
+Entrada                    | Resultado
+---------------------------+-----------
+1 + 2 + 3                  |   6
+1 + 2 == 3                 | true
+-1 + 2                     |   1
+true or false and false    | true
 ```
 
 ---
@@ -306,12 +262,12 @@ Visitor Semântico   ← Fase 3
 
 ## Slide 11 — Fase 3: Tabela de Símbolos
 
-**Título:** Fase 3 — Por Que Uma Tabela Nova
+**Título:** Fase 3 — Uma Tabela Própria pra Análise Estática
 
 **Falar:**
 
-- A gente **decidiu não reaproveitar** o `Contexto<Tipo>` legado.
-- Motivo: ele só guarda o tipo e é descartado quando o escopo fecha. A análise estática (e o linter depois) precisa de mais.
+- A gente construiu uma tabela de símbolos própria, **complementar** ao `Contexto<Tipo>` existente.
+- A ideia foi não interferir no que já funcionava: o `Contexto` segue cuidando da execução, e essa nova tabela cuida do que a análise estática precisa de extra — **kind** do símbolo, **contadores de uso** (lido/escrito), e **escopos que sobrevivem ao fechamento** pro linter conseguir inspecionar depois.
 - Três classes formam a tabela:
   - `Simbolo` — entrada declarada (nome, tipo, kind, contadores).
   - `Escopo` — `LinkedHashMap` + ponteiro pro pai.
@@ -330,10 +286,6 @@ public class TabelaSimbolos {
     }
 
     public void fecharEscopo() {
-        if (escopoAtual.getPai() == null) {
-            throw new IllegalStateException(
-                "tentativa de fechar o escopo global");
-        }
         escoposFechados.add(escopoAtual);   // ← não destrói: arquiva
         escopoAtual = escopoAtual.getPai();
     }
@@ -422,52 +374,125 @@ public class Escopo {
 
 ---
 
-## Slide 14 — Fase 3: O Visitor Semântico
+## Slide 14 — Fase 3: Visitor — Estratégia
 
-**Título:** Fase 3 — Visitor e Erros Padronizados
+**Título:** Fase 3 — O Visitor Semântico (1/2): Estratégia
 
 **Falar:**
 
-- `VisitorSemantico` despacha por `instanceof` em três frentes: **comandos, declarações e expressões**.
-- Cuidado importante: ele **não para no primeiro erro**. Registra na lista `erros` e segue analisando — uma execução só, máximo de erros possível.
-- Pra não cascatear: sub-expressão com tipo indeterminado vira "tipo desconhecido" e os erros seguintes daquela cadeia são suprimidos.
-- Saída uniforme: `ERRO SEMANTICO [CODIGO]: mensagem`. **9 códigos** no total.
+- **Despacho por `instanceof`** — escolha tomada lá na Fase 1. O método principal olha o tipo do nó e roteia pra um método específico (`visitarIfThenElse`, `visitarAtribuicao`, etc).
+- O visitor trabalha em **três frentes**, espelhando a AST:
+  - **Comandos** — `if`, `while`, atribuição, `read`, `write`, chamada de procedimento, sequência, bloco com declaração.
+  - **Declarações** — variável, procedimento, composta.
+  - **Expressões** — função `tipoDe()`, que devolve o tipo da expressão ou `null` se for indeterminado.
+- Duas decisões de projeto importantes:
+  1. **Não para no primeiro erro** — registra na lista `erros` e segue. Uma execução só, máximo de problemas reportados.
+  2. **Tipo desconhecido (`null`) suprime cascata** — se uma sub-expressão deu erro, os checks que dependem dela são silenciados pra não soltar erro derivado.
 
 **Código (lado direito):**
 
 ```java
-private void visitarComando(Comando c) {
-    if (c instanceof IfThenElse)         { visitarIfThenElse((IfThenElse) c); return; }
-    if (c instanceof While)              { visitarWhile((While) c); return; }
-    if (c instanceof Atribuicao)         { visitarAtribuicao((Atribuicao) c); return; }
-    if (c instanceof ChamadaProcedimento){ visitarChamadaProcedimento(...); return; }
-    // ...
-}
+public class VisitorSemantico {
 
+    private final TabelaSimbolos tabela = new TabelaSimbolos();
+    private final List<ErroSemantico> erros = new ArrayList<>();
+
+    public List<ErroSemantico> analisar(Programa programa) {
+        if (programa != null && programa.getComando() != null) {
+            visitarComando(programa.getComando());
+        }
+        return Collections.unmodifiableList(erros);
+    }
+
+    private void visitarComando(Comando c) {
+        if (c instanceof IfThenElse)          { visitarIfThenElse((IfThenElse) c); return; }
+        if (c instanceof While)               { visitarWhile((While) c); return; }
+        if (c instanceof Atribuicao)          { visitarAtribuicao((Atribuicao) c); return; }
+        if (c instanceof ChamadaProcedimento) { visitarChamadaProcedimento(...); return; }
+        if (c instanceof ComandoDeclaracao)   { visitarComandoDeclaracao(...); return; }
+        if (c instanceof SequenciaComando)    { /* visita os dois lados */ return; }
+        if (c instanceof Read)                { visitarRead((Read) c); return; }
+        if (c instanceof Write)               { tipoDe(((Write) c).getExpressao()); return; }
+    }
+}
+```
+
+---
+
+## Slide 15 — Fase 3: Visitor — Exemplos do Que Ele Checa
+
+**Título:** Fase 3 — O Visitor Semântico (2/2): Em Ação
+
+**Falar:**
+
+- Cada método de visita aplica **uma ou mais regras** pro nó que recebeu. Dois exemplos concretos:
+- **`visitarAtribuicao`** — quatro coisas em sequência:
+  1. O identificador existe? (busca na tabela)
+  2. É realmente uma variável? (não pode atribuir a procedimento)
+  3. Os tipos batem? (variável e expressão precisam ter o mesmo tipo)
+  4. Marca o símbolo como "escrito" — já alimentando o contador que o linter vai usar.
+- **`visitarChamadaProcedimento`** — também checks em cascata:
+  1. O nome existe?
+  2. É um procedimento? (não pode "chamar" uma variável)
+  3. A **aridade** bate? (número de argumentos)
+  4. Os **tipos** dos argumentos batem com os dos parâmetros formais?
+- Cada falha vira um `ErroSemantico` com um código específico — então o relatório fica categorizado.
+
+**Código (lado direito):**
+
+```java
 private void visitarAtribuicao(Atribuicao c) {
     Id id = c.getId();
     Simbolo s = tabela.buscar(id.getIdName());
     Tipo tipoExp = tipoDe(c.getExpressao());
 
     if (s == null) {
-        registrar(Codigo.IDENTIFICADOR_NAO_DECLARADO,
-            "identificador '" + id.getIdName() + "' nao declarado");
-        return;
+        registrar(Codigo.IDENTIFICADOR_NAO_DECLARADO, ...);  return;
     }
     if (s.getKind() == SimboloKind.PROCEDIMENTO) {
-        registrar(Codigo.IDENTIFICADOR_NAO_E_VARIAVEL, ...);
-        return;
+        registrar(Codigo.IDENTIFICADOR_NAO_E_VARIAVEL, ...); return;
     }
-    s.incrementarEscrito();               // ← já alimentando o linter
+    s.incrementarEscrito();              // ← alimenta o linter
 
     if (s.getTipo() != null && tipoExp != null
             && !s.getTipo().eIgual(tipoExp)) {
         registrar(Codigo.TIPO_INCOMPATIVEL_ATRIBUICAO, ...);
     }
 }
+
+private void visitarChamadaProcedimento(ChamadaProcedimento c) {
+    Simbolo s = tabela.buscar(c.getNomeProcedimento().getIdName());
+    if (s == null)                          { registrar(NAO_DECLARADO, ...);       return; }
+    if (s.getKind() != PROCEDIMENTO)        { registrar(NAO_E_PROCEDIMENTO, ...);  return; }
+
+    int aridadeFormal = ...;
+    int aridadeReal   = ...;
+    if (aridadeFormal != aridadeReal)       { registrar(ARIDADE_PROCEDIMENTO, ...); return; }
+
+    // aridades batem: checa tipo de cada argumento contra cada parâmetro formal
+    // → TIPO_ARGUMENTO_PROCEDIMENTO se algum não bater
+}
 ```
 
-**Códigos de erro:**
+---
+
+## Slide 16 — Fase 3: Erros Padronizados
+
+**Título:** Fase 3 — O Formato dos Erros
+
+**Falar:**
+
+- Todos os erros saem num **formato uniforme**, com um código que os categoriza.
+- São **9 códigos** no total, cobrindo as principais classes de problema.
+- Esse formato uniforme já é pensado pra Fase 4: os avisos do linter vão seguir o mesmo padrão, só prefixados com `LINT` em vez de `ERRO SEMANTICO`.
+
+**Código (lado direito):**
+
+```text
+ERRO SEMANTICO [CODIGO]: mensagem
+```
+
+**Os 9 códigos:**
 
 ```text
 IDENTIFICADOR_NAO_DECLARADO        TIPO_INCOMPATIVEL_ATRIBUICAO
@@ -479,16 +504,16 @@ IDENTIFICADOR_NAO_E_PROCEDIMENTO   ARIDADE_PROCEDIMENTO
 
 ---
 
-## Slide 15 — Fase 3: Validação
+## Slide 17 — Fase 3: Validação
 
 **Título:** Fase 3 — Suite de Testes
 
 **Falar:**
 
-- **15 programas**: 4 válidos (que devem passar e executar) + 11 inválidos (cada um dispara um código específico).
+- **15 programas**: 4 válidos (que devem passar e executar) + 11 inválidos (cada um disparando um código específico).
 - Cobertura: declaração antes do uso, tipos, escopo, chamadas de procedimento.
 - Dois testes que vale destacar:
-  - Um com **escopos aninhados e shadowing** — `x` inteira por fora, `x` booleana por dentro. Confirma que a resolução funciona.
+  - Um com **escopos aninhados e shadowing** — `x` inteira por fora, `x` booleana por dentro. Confirma que a resolução de nomes funciona.
   - Um programa propositalmente cheio de erros — prova que o visitor **acumula** vários diagnósticos numa execução só.
 
 **Código (lado direito — saída real):**
@@ -506,19 +531,19 @@ Os 15 programas produziram exatamente a saída esperada.
 
 ---
 
-## Slide 16 — Status e Próximos Passos
+## Slide 18 — Status e Próximos Passos
 
 **Título:** Onde Estamos e o Que Vem
 
 **Falar:**
 
-- **Fase 1** — base mapeada, lacunas catalogadas.
-- **Fase 2** — parser com precedência correta + AST aberta pros visitors.
-- **Fase 3** — tabela de símbolos própria, visitor por `instanceof`, erros padronizados.
+- **Fase 1** — base mapeada, pontos de extensão identificados, decisão pelo visitor por `instanceof`.
+- **Fase 2** — AST exposta pros visitors + gramática de expressões consolidada.
+- **Fase 3** — visitor semântico em pé, tabela de símbolos própria, erros padronizados.
 - A próxima é a **Fase 4 — o linter**, com três regras:
   1. Variável declarada e nunca utilizada.
   2. Código morto a partir de condição constante.
   3. Complexidade por procedimento.
-- O terreno já está pronto: os contadores `lido`/`escrito` já estão sendo preenchidos, e o ponto de integração no pipeline já está definido.
+- O terreno já está pronto: os contadores `lido`/`escrito` já estão sendo preenchidos, o `kind` distingue os símbolos, os escopos fechados ficam arquivados, e o ponto de integração no pipeline já está definido.
 
 *(sem código — slide de fechamento)*
