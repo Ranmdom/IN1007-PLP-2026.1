@@ -359,31 +359,33 @@ Write PWrite() :
 
 IfThenElse PIfThenElse() :
 {
+	Token tkIf;
 	Expressao expressao;
 	Comando comandoThen;
 	Comando comandoElse;
 }
 {
-	<IF>
+	tkIf = <IF>
 		expressao = PExpressao()
 	<THEN>
 		comandoThen = PComando()
 	<ELSE>
 		comandoElse = PComando()
-	{return new IfThenElse (expressao, comandoThen, comandoElse);}
+	{return new IfThenElse (expressao, comandoThen, comandoElse, tkIf.beginLine);}
 }
 
 While PWhile() :
 {
+	Token tkWhile;
 	Expressao expressao;
 	Comando comando;
 }
 {
-	<WHILE>
+	tkWhile = <WHILE>
 		expressao = PExpressao()
 	<DO>
 		comando = PComando()
-	{return new While(expressao, comando);}
+	{return new While(expressao, comando, tkWhile.beginLine);}
 }
 
 Skip PSkip() :
@@ -689,18 +691,19 @@ DeclaracaoComposta PDeclaracaoComposta():
 
 DeclaracaoProcedimento PDeclaracaoProcedimento():
 {
+	Token tkProc;
 	Id nome;
 	DefProcedimento defProcedimento;
 }
 {
     (
         LOOKAHEAD(<PROC> PId() <LPAREN> <RPAREN>)
-    	<PROC> nome = PId() <LPAREN> <RPAREN> defProcedimento = PDefProcedimento()
+    	tkProc = <PROC> nome = PId() <LPAREN> <RPAREN> defProcedimento = PDefProcedimento()
     	|
-    	<PROC> nome = PId() <LPAREN> defProcedimento = PDefProcedimento()
+    	tkProc = <PROC> nome = PId() <LPAREN> defProcedimento = PDefProcedimento()
     )
 	{
-	    return new DeclaracaoProcedimento (nome, defProcedimento);
+	    return new DeclaracaoProcedimento(nome, defProcedimento, tkProc.beginLine);
 	}
 }
 
@@ -740,18 +743,21 @@ Tipo PTipo():
 
 ListaDeclaracaoParametro PListaDeclaracaoParametro():
 {
+	Token tkId;
 	Id id;
 	Tipo tipo;
 	ListaDeclaracaoParametro lista = null;
 }
 {
-	[ tipo = PTipo() 
-	  id = PId() 
-	  { lista = new ListaDeclaracaoParametro(new DeclaracaoParametro(id, tipo));}
-	] 
-	( <COMMA> 
-	  tipo = PTipo() id = PId() 
-	  {lista = new ListaDeclaracaoParametro(new DeclaracaoParametro(id, tipo), lista);} 
+	[ tipo = PTipo()
+	  tkId = <IDENTIFIER>
+	  { id = new Id(tkId.image);
+	    lista = new ListaDeclaracaoParametro(new DeclaracaoParametro(id, tipo, tkId.beginLine));}
+	]
+	( <COMMA>
+	  tipo = PTipo() tkId = <IDENTIFIER>
+	  { id = new Id(tkId.image);
+	    lista = new ListaDeclaracaoParametro(new DeclaracaoParametro(id, tipo, tkId.beginLine), lista);}
 	)*
 	
 	{
@@ -779,14 +785,13 @@ ListaExpressao PListaExpressao():
 
 DeclaracaoVariavel PDeclaracaoVariavel() :
 {
+	Token tkVar;
 	Id id;
 	Expressao exp;
-	DeclaracaoVariavel retorno;
 }
 {
-	 <VAR> id = PId() <ASSIGN> exp = PExpressao() 
-	   	{retorno = new DeclaracaoVariavel(id, exp);}
+	 tkVar = <VAR> id = PId() <ASSIGN> exp = PExpressao()
 	{
-		return retorno;
+		return new DeclaracaoVariavel(id, exp, tkVar.beginLine);
 	}
 }

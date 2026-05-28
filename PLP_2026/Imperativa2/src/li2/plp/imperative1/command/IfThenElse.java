@@ -17,11 +17,23 @@ public class IfThenElse implements Comando {
 
 	private Comando comandoElse;
 
+	private int linha;
+
 	public IfThenElse(Expressao expressao, Comando comandoThen,
 			Comando comandoElse) {
+		this(expressao, comandoThen, comandoElse, -1);
+	}
+
+	public IfThenElse(Expressao expressao, Comando comandoThen,
+			Comando comandoElse, int linha) {
 		this.expressao = expressao;
 		this.comandoThen = comandoThen;
 		this.comandoElse = comandoElse;
+		this.linha = linha;
+	}
+
+	public int getLinha() {
+		return linha;
 	}
 
 	/**

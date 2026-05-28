@@ -282,7 +282,7 @@ public class VisitorSemantico {
 		Tipo tipoInicial = tipoDe(d.getExpressao());
 		Simbolo simbolo = new Simbolo(id.getIdName(), tipoInicial,
 				SimboloKind.VARIAVEL,
-				tabela.getEscopoAtual().getNivel());
+				tabela.getEscopoAtual().getNivel(), null, d.getLinha());
 		if (!tabela.declarar(simbolo)) {
 			registrar(ErroSemantico.Codigo.IDENTIFICADOR_JA_DECLARADO,
 					"variavel '" + id.getIdName()
@@ -298,7 +298,7 @@ public class VisitorSemantico {
 		Tipo tipoProc = construirTipoProcedimento(formais);
 		Simbolo simbolo = new Simbolo(id.getIdName(), tipoProc,
 				SimboloKind.PROCEDIMENTO,
-				tabela.getEscopoAtual().getNivel(), formais);
+				tabela.getEscopoAtual().getNivel(), formais, d.getLinha());
 		if (!tabela.declarar(simbolo)) {
 			registrar(ErroSemantico.Codigo.IDENTIFICADOR_JA_DECLARADO,
 					"procedimento '" + id.getIdName()
@@ -318,7 +318,7 @@ public class VisitorSemantico {
 			DeclaracaoParametro p = cursor.getHead();
 			Simbolo s = new Simbolo(p.getId().getIdName(), p.getTipo(),
 					SimboloKind.PARAMETRO,
-					tabela.getEscopoAtual().getNivel());
+					tabela.getEscopoAtual().getNivel(), null, p.getLinha());
 			if (!tabela.declarar(s)) {
 				registrar(ErroSemantico.Codigo.IDENTIFICADOR_JA_DECLARADO,
 						"parametro '" + p.getId().getIdName()

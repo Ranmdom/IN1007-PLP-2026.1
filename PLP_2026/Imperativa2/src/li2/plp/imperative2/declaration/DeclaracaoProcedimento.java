@@ -13,11 +13,21 @@ public class DeclaracaoProcedimento extends Declaracao {
 
 	private Id id;
 	private DefProcedimento defProcedimento;
+	private int linha;
 
 	public DeclaracaoProcedimento(Id id, DefProcedimento defProcedimento) {
+		this(id, defProcedimento, -1);
+	}
+
+	public DeclaracaoProcedimento(Id id, DefProcedimento defProcedimento, int linha) {
 		super();
 		this.id = id;
 		this.defProcedimento = defProcedimento;
+		this.linha = linha;
+	}
+
+	public int getLinha() {
+		return linha;
 	}
 
 	@Override

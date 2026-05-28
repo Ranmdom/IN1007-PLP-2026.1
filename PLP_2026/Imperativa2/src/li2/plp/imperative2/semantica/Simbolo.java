@@ -17,6 +17,7 @@ public class Simbolo {
 	private final Tipo tipo;
 	private final SimboloKind kind;
 	private final int escopoNivel;
+	private final int linha;
 
 	private final ListaDeclaracaoParametro parametrosFormais;
 
@@ -24,16 +25,22 @@ public class Simbolo {
 	private int escrito = 0;
 
 	public Simbolo(String nome, Tipo tipo, SimboloKind kind, int escopoNivel) {
-		this(nome, tipo, kind, escopoNivel, null);
+		this(nome, tipo, kind, escopoNivel, null, -1);
 	}
 
 	public Simbolo(String nome, Tipo tipo, SimboloKind kind, int escopoNivel,
 			ListaDeclaracaoParametro parametrosFormais) {
+		this(nome, tipo, kind, escopoNivel, parametrosFormais, -1);
+	}
+
+	public Simbolo(String nome, Tipo tipo, SimboloKind kind, int escopoNivel,
+			ListaDeclaracaoParametro parametrosFormais, int linha) {
 		this.nome = nome;
 		this.tipo = tipo;
 		this.kind = kind;
 		this.escopoNivel = escopoNivel;
 		this.parametrosFormais = parametrosFormais;
+		this.linha = linha;
 	}
 
 	public String getNome() {
@@ -54,6 +61,10 @@ public class Simbolo {
 
 	public ListaDeclaracaoParametro getParametrosFormais() {
 		return parametrosFormais;
+	}
+
+	public int getLinha() {
+		return linha;
 	}
 
 	public int getLido() {
