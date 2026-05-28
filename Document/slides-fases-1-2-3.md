@@ -39,9 +39,9 @@ Análise léxica + sintática
   ↓
         AST
   ↓
-Análise semântica   ← Fase 3
+Análise semântica   
   ↓
-Análise de linter   ← Fase 4 (em andamento)
+Análise de linter  
   ↓
 Relatório de erros e avisos
 ```
