@@ -44,7 +44,7 @@ public class AvisoLinter {
         if (linha > 0) {
             sb.append("linha ").append(linha).append(": ");
         }
-        sb.append("LINT [").append(codigo.name()).append("]:");
+        sb.append("LINT [").append(codigo.getCodigo()).append("]:");
         if (contexto != null && !contexto.isEmpty()) {
             sb.append(" (em '").append(contexto).append("')");
         }

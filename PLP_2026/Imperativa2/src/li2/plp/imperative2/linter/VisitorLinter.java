@@ -107,7 +107,7 @@ public class VisitorLinter {
                     "ramo 'then' inalcancavel porque a condicao e sempre 'false'",
                     null, c.getLinha()));
         }
-        visitarComando(c.getComandoThen());
+        visitarComando(c.getComandoThen()); 
         visitarComando(c.getComandoElse());
     }
 
