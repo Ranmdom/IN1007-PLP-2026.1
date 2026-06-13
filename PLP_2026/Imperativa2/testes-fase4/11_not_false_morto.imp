@@ -1,3 +1,4 @@
 {
-  if not false then write(1) else write(0)
+  var x = 1;
+  if not false then write(x) else write(0)
 }
