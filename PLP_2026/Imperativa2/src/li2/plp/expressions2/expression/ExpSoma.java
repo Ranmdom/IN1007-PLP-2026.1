@@ -1,4 +1,5 @@
 package li2.plp.expressions2.expression;
+import li2.plp.imperative2.visitor.AstVisitor;
 
 import li2.plp.expressions1.util.Tipo;
 import li2.plp.expressions1.util.TipoPrimitivo;
@@ -61,5 +62,9 @@ public class ExpSoma extends ExpBinaria {
 	@Override
 	public ExpBinaria clone() {
 		return new ExpSoma(esq.clone(), dir.clone());
+	}
+
+	public void accept(AstVisitor v) {
+		v.visit(this);
 	}
 }

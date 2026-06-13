@@ -1,4 +1,5 @@
 package li2.plp.imperative1.command;
+import li2.plp.imperative2.visitor.AstVisitor;
 
 import li2.plp.imperative1.memory.AmbienteExecucaoImperativa;
 import li2.plp.imperative1.memory.AmbienteCompilacaoImperativa;
@@ -31,5 +32,9 @@ public class Skip implements Comando {
 	 */
 	public boolean checaTipo(AmbienteCompilacaoImperativa ambiente) {
 		return true;
+	}
+
+	public void accept(AstVisitor v) {
+		v.visit(this);
 	}
 }

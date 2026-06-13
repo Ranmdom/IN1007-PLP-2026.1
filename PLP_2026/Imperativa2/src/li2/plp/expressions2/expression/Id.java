@@ -1,4 +1,5 @@
 package li2.plp.expressions2.expression;
+import li2.plp.imperative2.visitor.AstVisitor;
 
 import li2.plp.expressions1.util.Tipo;
 import li2.plp.expressions2.memory.AmbienteCompilacao;
@@ -106,5 +107,9 @@ public class Id implements Expressao {
 	
 	public Id clone() {
 		return this;
+	}
+
+	public void accept(AstVisitor v) {
+		v.visit(this);
 	}
 }

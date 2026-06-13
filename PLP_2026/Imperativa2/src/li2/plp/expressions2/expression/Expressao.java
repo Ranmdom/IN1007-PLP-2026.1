@@ -5,11 +5,19 @@ import li2.plp.expressions2.memory.AmbienteCompilacao;
 import li2.plp.expressions2.memory.AmbienteExecucao;
 import li2.plp.expressions2.memory.VariavelJaDeclaradaException;
 import li2.plp.expressions2.memory.VariavelNaoDeclaradaException;
+import li2.plp.imperative2.visitor.AstVisitor;
 
-/** 
+/**
  * Uma expressao &eacute; a unidade basica na Linguagem de Expressoes.
  */
 public interface Expressao {
+
+	/**
+	 * Aceita um visitor da AST, delegando para a sobrecarga
+	 * {@code visit} correspondente ao tipo concreto desta expressao
+	 * (padrao Visitor / dupla-dispatch).
+	 */
+	void accept(AstVisitor v);
 
 	/**
 	 * Avalia a expressao retornando seu Valor.

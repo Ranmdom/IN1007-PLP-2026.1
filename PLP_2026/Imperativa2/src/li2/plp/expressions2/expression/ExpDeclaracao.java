@@ -1,4 +1,5 @@
 package li2.plp.expressions2.expression;
+import li2.plp.imperative2.visitor.AstVisitor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -172,5 +173,9 @@ public class ExpDeclaracao implements Expressao {
 		retorno = new ExpDeclaracao(novaLista, this.expressao.clone());
 		
 		return retorno;
+	}
+
+	public void accept(AstVisitor v) {
+		v.visit(this);
 	}
 }

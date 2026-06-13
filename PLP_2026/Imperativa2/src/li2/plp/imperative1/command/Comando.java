@@ -12,8 +12,16 @@ import li2.plp.imperative1.memory.EntradaVaziaException;
 import li2.plp.imperative1.memory.ErroTipoEntradaException;
 import li2.plp.expressions2.memory.IdentificadorJaDeclaradoException;
 import li2.plp.expressions2.memory.IdentificadorNaoDeclaradoException;
+import li2.plp.imperative2.visitor.AstVisitor;
 
 public interface Comando {
+
+	/**
+	 * Aceita um visitor da AST, delegando para a sobrecarga
+	 * {@code visit} correspondente ao tipo concreto deste comando
+	 * (padrao Visitor / dupla-dispatch).
+	 */
+	void accept(AstVisitor v);
 
 	/**
 	 * Executa este comando.

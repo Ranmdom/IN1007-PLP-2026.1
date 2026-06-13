@@ -1,4 +1,5 @@
 package li2.plp.imperative2.declaration;
+import li2.plp.imperative2.visitor.AstVisitor;
 
 import li2.plp.expressions2.expression.Id;
 import li2.plp.expressions2.memory.IdentificadorJaDeclaradoException;
@@ -67,5 +68,9 @@ public class DeclaracaoProcedimento extends Declaracao {
 
 	public DefProcedimento getDefProcedimento() {
 		return this.defProcedimento;
+	}
+
+	public void accept(AstVisitor v) {
+		v.visit(this);
 	}
 }

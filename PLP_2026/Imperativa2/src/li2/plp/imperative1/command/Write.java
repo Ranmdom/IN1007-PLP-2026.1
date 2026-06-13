@@ -1,4 +1,5 @@
 package li2.plp.imperative1.command;
+import li2.plp.imperative2.visitor.AstVisitor;
 
 import li2.plp.expressions2.expression.Expressao;
 import li2.plp.imperative1.memory.AmbienteExecucaoImperativa;
@@ -49,4 +50,8 @@ public class Write implements IO {
 		return expressao;
 	}
 
+
+	public void accept(AstVisitor v) {
+		v.visit(this);
+	}
 }

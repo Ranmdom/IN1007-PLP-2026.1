@@ -1,4 +1,5 @@
 package li2.plp.imperative1.declaration;
+import li2.plp.imperative2.visitor.AstVisitor;
 
 import li2.plp.expressions2.expression.Expressao;
 import li2.plp.expressions2.expression.Id;
@@ -77,5 +78,9 @@ public class DeclaracaoVariavel extends Declaracao {
 			ambiente.map(getId(), getExpressao().getTipo(ambiente));
 		}
 		return result;
+	}
+
+	public void accept(AstVisitor v) {
+		v.visit(this);
 	}
 }

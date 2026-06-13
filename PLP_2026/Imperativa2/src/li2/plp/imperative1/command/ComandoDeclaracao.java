@@ -1,4 +1,5 @@
 package li2.plp.imperative1.command;
+import li2.plp.imperative2.visitor.AstVisitor;
 
 import li2.plp.expressions2.memory.IdentificadorJaDeclaradoException;
 import li2.plp.expressions2.memory.IdentificadorNaoDeclaradoException;
@@ -63,4 +64,8 @@ public class ComandoDeclaracao implements Comando {
 		return comando;
 	}
 
+
+	public void accept(AstVisitor v) {
+		v.visit(this);
+	}
 }

@@ -5,12 +5,10 @@ import java.util.Collections;
 import java.util.List;
 
 import li2.plp.expressions2.expression.Expressao;
-import li2.plp.imperative1.command.Comando;
 import li2.plp.imperative1.command.ComandoDeclaracao;
 import li2.plp.imperative1.command.IfThenElse;
 import li2.plp.imperative1.command.SequenciaComando;
 import li2.plp.imperative1.command.While;
-import li2.plp.imperative1.declaration.Declaracao;
 import li2.plp.imperative1.declaration.DeclaracaoComposta;
 import li2.plp.imperative2.Programa;
 import li2.plp.imperative2.declaration.DeclaracaoProcedimento;
@@ -18,8 +16,19 @@ import li2.plp.imperative2.semantica.Escopo;
 import li2.plp.imperative2.semantica.Simbolo;
 import li2.plp.imperative2.semantica.SimboloKind;
 import li2.plp.imperative2.semantica.TabelaSimbolos;
+import li2.plp.imperative2.visitor.AstVisitor;
 
-public class VisitorLinter {
+/**
+ * Visitor de linter da Linguagem Imperativa 2.
+ *
+ * Implementa o padrao Visitor classico (dupla-dispatch) sobre a AST:
+ * cada no chama {@code accept(this)} e e redirecionado para a sobrecarga
+ * {@code visit} correspondente. So sobrescreve os nos relevantes para as
+ * regras de lint; os demais usam o comportamento default (no-op) de
+ * {@link AstVisitor}, o que reproduz a navegacao seletiva da versao
+ * anterior baseada em {@code instanceof}.
+ */
+public class VisitorLinter implements AstVisitor {
 
     private static final int LIMIAR_COMPLEXIDADE = 4;
 
@@ -37,7 +46,7 @@ public class VisitorLinter {
     public List<AvisoLinter> analisar(Programa programa) {
         verificarVariaveisNaoUtilizadas();
         if (programa != null && programa.getComando() != null) {
-            visitarComando(programa.getComando());
+            programa.getComando().accept(this);
         }
         return Collections.unmodifiableList(avisos);
     }
@@ -64,35 +73,28 @@ public class VisitorLinter {
 
     // ---- Traversal da AST ----
 
-    private void visitarComando(Comando c) {
-        if (c instanceof SequenciaComando) {
-            SequenciaComando s = (SequenciaComando) c;
-            visitarComando(s.getComando1());
-            visitarComando(s.getComando2());
-        } else if (c instanceof ComandoDeclaracao) {
-            ComandoDeclaracao cd = (ComandoDeclaracao) c;
-            visitarDeclaracao(cd.getDeclaracao());
-            visitarComando(cd.getComando());
-        } else if (c instanceof IfThenElse) {
-            visitarIfThenElse((IfThenElse) c);
-        } else if (c instanceof While) {
-            visitarWhile((While) c);
-        }
+    @Override
+    public void visit(SequenciaComando c) {
+        c.getComando1().accept(this);
+        c.getComando2().accept(this);
     }
 
-    private void visitarDeclaracao(Declaracao d) {
-        if (d instanceof DeclaracaoComposta) {
-            DeclaracaoComposta dc = (DeclaracaoComposta) d;
-            visitarDeclaracao(dc.getDeclaracao1());
-            visitarDeclaracao(dc.getDeclaracao2());
-        } else if (d instanceof DeclaracaoProcedimento) {
-            visitarDeclaracaoProcedimento((DeclaracaoProcedimento) d);
-        }
+    @Override
+    public void visit(ComandoDeclaracao c) {
+        c.getDeclaracao().accept(this);
+        c.getComando().accept(this);
+    }
+
+    @Override
+    public void visit(DeclaracaoComposta d) {
+        d.getDeclaracao1().accept(this);
+        d.getDeclaracao2().accept(this);
     }
 
     // ---- Regra 2: codigo morto ----
 
-    private void visitarIfThenElse(IfThenElse c) {
+    @Override
+    public void visit(IfThenElse c) {
         if (procedimentoAtual != null) {
             complexidade++;
         }
@@ -107,11 +109,12 @@ public class VisitorLinter {
                     "ramo 'then' inalcancavel porque a condicao e sempre 'false'",
                     null, c.getLinha()));
         }
-        visitarComando(c.getComandoThen()); 
-        visitarComando(c.getComandoElse());
+        c.getComandoThen().accept(this);
+        c.getComandoElse().accept(this);
     }
 
-    private void visitarWhile(While c) {
+    @Override
+    public void visit(While c) {
         if (procedimentoAtual != null) {
             complexidade++;
         }
@@ -121,19 +124,20 @@ public class VisitorLinter {
                     "corpo do 'while' inalcancavel porque a condicao e sempre 'false'",
                     null, c.getLinha()));
         }
-        visitarComando(c.getComando());
+        c.getComando().accept(this);
     }
 
     // ---- Regra 3: complexidade de procedimento ----
 
-    private void visitarDeclaracaoProcedimento(DeclaracaoProcedimento dp) {
+    @Override
+    public void visit(DeclaracaoProcedimento dp) {
         String nomeProcAnterior = procedimentoAtual;
         int complexidadeAnterior = complexidade;
 
         procedimentoAtual = dp.getId().getIdName();
         complexidade = 0;
 
-        visitarComando(dp.getDefProcedimento().getComando());
+        dp.getDefProcedimento().getComando().accept(this);
 
         if (complexidade > LIMIAR_COMPLEXIDADE) {
             avisos.add(new AvisoLinter(

@@ -1,4 +1,5 @@
 package li2.plp.imperative1.command;
+import li2.plp.imperative2.visitor.AstVisitor;
 
 import li2.plp.imperative1.memory.AmbienteCompilacaoImperativa;
 import li2.plp.imperative1.memory.AmbienteExecucaoImperativa;
@@ -54,5 +55,9 @@ public class SequenciaComando implements Comando {
 
 	public Comando getComando2() {
 		return comando2;
+	}
+
+	public void accept(AstVisitor v) {
+		v.visit(this);
 	}
 }

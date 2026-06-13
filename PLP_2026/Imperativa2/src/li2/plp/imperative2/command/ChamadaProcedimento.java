@@ -1,4 +1,5 @@
 package li2.plp.imperative2.command;
+import li2.plp.imperative2.visitor.AstVisitor;
 
 import li2.plp.expressions1.util.Tipo;
 import li2.plp.expressions2.expression.Id;
@@ -102,4 +103,8 @@ public class ChamadaProcedimento implements Comando {
 		return parametrosReais;
 	}
 
+
+	public void accept(AstVisitor v) {
+		v.visit(this);
+	}
 }

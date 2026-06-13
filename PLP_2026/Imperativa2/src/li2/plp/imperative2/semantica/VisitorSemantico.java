@@ -23,7 +23,6 @@ import li2.plp.expressions2.expression.ValorBooleano;
 import li2.plp.expressions2.expression.ValorInteiro;
 import li2.plp.expressions2.expression.ValorString;
 import li2.plp.imperative1.command.Atribuicao;
-import li2.plp.imperative1.command.Comando;
 import li2.plp.imperative1.command.ComandoDeclaracao;
 import li2.plp.imperative1.command.IfThenElse;
 import li2.plp.imperative1.command.Read;
@@ -31,7 +30,6 @@ import li2.plp.imperative1.command.SequenciaComando;
 import li2.plp.imperative1.command.Skip;
 import li2.plp.imperative1.command.While;
 import li2.plp.imperative1.command.Write;
-import li2.plp.imperative1.declaration.Declaracao;
 import li2.plp.imperative1.declaration.DeclaracaoComposta;
 import li2.plp.imperative1.declaration.DeclaracaoVariavel;
 import li2.plp.imperative2.Programa;
@@ -42,28 +40,38 @@ import li2.plp.imperative2.declaration.DeclaracaoProcedimento;
 import li2.plp.imperative2.declaration.DefProcedimento;
 import li2.plp.imperative2.declaration.ListaDeclaracaoParametro;
 import li2.plp.imperative2.util.TipoProcedimento;
+import li2.plp.imperative2.visitor.AstVisitor;
 
 /**
  * Visitor semantico da Linguagem Imperativa 2.
  *
- * Faz despacho por instanceof (decisao tomada na Fase 1) sobre os tres
- * grupos de nos da AST: Comando, Declaracao e Expressao. Em vez de
- * lancar excecao no primeiro erro, acumula erros na lista `erros` e
- * segue analisando, para que uma unica execucao reporte o maximo de
- * problemas possivel.
+ * Implementa o padrao Visitor classico (dupla-dispatch): cada no da AST
+ * chama {@code accept(this)} e e redirecionado para a sobrecarga
+ * {@code visit} correspondente ao seu tipo concreto. Em vez de lancar
+ * excecao no primeiro erro, acumula erros na lista `erros` e segue
+ * analisando, para que uma unica execucao reporte o maximo de problemas
+ * possivel.
+ *
+ * O tipo calculado para cada expressao e devolvido pelo canal
+ * {@link #resultadoTipo}, lido imediatamente pelo helper {@link #tipoDe}
+ * apos cada {@code accept} (a dupla-dispatch das expressoes e sincrona,
+ * entao nao ha risco de sobrescrita entre irmaos).
  *
  * A tabela de simbolos e independente do `Contexto<Tipo>` usado pelos
  * `checaTipo()` antigos, e mantem contadores de leitura/escrita por
  * simbolo que serao consumidos pelo linter na Fase 4.
  */
-public class VisitorSemantico {
+public class VisitorSemantico implements AstVisitor {
 
 	private final TabelaSimbolos tabela = new TabelaSimbolos();
 	private final List<ErroSemantico> erros = new ArrayList<>();
 
+	/** Canal de retorno do tipo calculado pela visita de uma expressao. */
+	private Tipo resultadoTipo;
+
 	public List<ErroSemantico> analisar(Programa programa) {
 		if (programa != null && programa.getComando() != null) {
-			visitarComando(programa.getComando());
+			programa.getComando().accept(this);
 		}
 		return Collections.unmodifiableList(erros);
 	}
@@ -78,77 +86,50 @@ public class VisitorSemantico {
 
 	// ---------- comandos ----------
 
-	private void visitarComando(Comando c) {
-		if (c instanceof Skip) {
-			return;
-		}
-		if (c instanceof SequenciaComando) {
-			SequenciaComando s = (SequenciaComando) c;
-			visitarComando(s.getComando1());
-			visitarComando(s.getComando2());
-			return;
-		}
-		if (c instanceof ComandoDeclaracao) {
-			visitarComandoDeclaracao((ComandoDeclaracao) c);
-			return;
-		}
-		if (c instanceof IfThenElse) {
-			visitarIfThenElse((IfThenElse) c);
-			return;
-		}
-		if (c instanceof While) {
-			visitarWhile((While) c);
-			return;
-		}
-		if (c instanceof Atribuicao) {
-			visitarAtribuicao((Atribuicao) c);
-			return;
-		}
-		if (c instanceof Write) {
-			tipoDe(((Write) c).getExpressao());
-			return;
-		}
-		if (c instanceof Read) {
-			visitarRead((Read) c);
-			return;
-		}
-		if (c instanceof ChamadaProcedimento) {
-			visitarChamadaProcedimento((ChamadaProcedimento) c);
-			return;
-		}
-		// no de comando nao reconhecido: nao registra erro, apenas ignora
-		// (o parser ja garante que so geramos nos conhecidos)
+	@Override
+	public void visit(Skip c) {
+		// nada a checar
 	}
 
-	private void visitarComandoDeclaracao(ComandoDeclaracao c) {
+	@Override
+	public void visit(SequenciaComando c) {
+		c.getComando1().accept(this);
+		c.getComando2().accept(this);
+	}
+
+	@Override
+	public void visit(ComandoDeclaracao c) {
 		tabela.abrirEscopo();
-		visitarDeclaracao(c.getDeclaracao());
-		visitarComando(c.getComando());
+		c.getDeclaracao().accept(this);
+		c.getComando().accept(this);
 		tabela.fecharEscopo();
 	}
 
-	private void visitarIfThenElse(IfThenElse c) {
+	@Override
+	public void visit(IfThenElse c) {
 		Tipo t = tipoDe(c.getExpressao());
 		if (t != null && !t.eBooleano()) {
 			registrar(ErroSemantico.Codigo.TIPO_CONDICAO_NAO_BOOLEANO,
 					"condicao do 'if' deve ser booleana, mas tem tipo "
 							+ nomeTipo(t));
 		}
-		visitarComando(c.getComandoThen());
-		visitarComando(c.getComandoElse());
+		c.getComandoThen().accept(this);
+		c.getComandoElse().accept(this);
 	}
 
-	private void visitarWhile(While c) {
+	@Override
+	public void visit(While c) {
 		Tipo t = tipoDe(c.getExpressao());
 		if (t != null && !t.eBooleano()) {
 			registrar(ErroSemantico.Codigo.TIPO_CONDICAO_NAO_BOOLEANO,
 					"condicao do 'while' deve ser booleana, mas tem tipo "
 							+ nomeTipo(t));
 		}
-		visitarComando(c.getComando());
+		c.getComando().accept(this);
 	}
 
-	private void visitarAtribuicao(Atribuicao c) {
+	@Override
+	public void visit(Atribuicao c) {
 		Id id = c.getId();
 		Simbolo s = tabela.buscar(id.getIdName());
 		Tipo tipoExp = tipoDe(c.getExpressao());
@@ -176,7 +157,13 @@ public class VisitorSemantico {
 		}
 	}
 
-	private void visitarRead(Read c) {
+	@Override
+	public void visit(Write c) {
+		tipoDe(c.getExpressao());
+	}
+
+	@Override
+	public void visit(Read c) {
 		Id id = c.getId();
 		Simbolo s = tabela.buscar(id.getIdName());
 		if (s == null) {
@@ -194,7 +181,8 @@ public class VisitorSemantico {
 		s.incrementarEscrito();
 	}
 
-	private void visitarChamadaProcedimento(ChamadaProcedimento c) {
+	@Override
+	public void visit(ChamadaProcedimento c) {
 		Id nome = c.getNomeProcedimento();
 		Simbolo s = tabela.buscar(nome.getIdName());
 		ListaExpressao reais = c.getParametrosReais();
@@ -259,25 +247,14 @@ public class VisitorSemantico {
 
 	// ---------- declaracoes ----------
 
-	private void visitarDeclaracao(Declaracao d) {
-		if (d instanceof DeclaracaoComposta) {
-			DeclaracaoComposta dc = (DeclaracaoComposta) d;
-			visitarDeclaracao(dc.getDeclaracao1());
-			visitarDeclaracao(dc.getDeclaracao2());
-			return;
-		}
-		if (d instanceof DeclaracaoVariavel) {
-			visitarDeclaracaoVariavel((DeclaracaoVariavel) d);
-			return;
-		}
-		if (d instanceof DeclaracaoProcedimento) {
-			visitarDeclaracaoProcedimento((DeclaracaoProcedimento) d);
-			return;
-		}
-		// declaracao desconhecida: ignorar
+	@Override
+	public void visit(DeclaracaoComposta d) {
+		d.getDeclaracao1().accept(this);
+		d.getDeclaracao2().accept(this);
 	}
 
-	private void visitarDeclaracaoVariavel(DeclaracaoVariavel d) {
+	@Override
+	public void visit(DeclaracaoVariavel d) {
 		Id id = d.getId();
 		Tipo tipoInicial = tipoDe(d.getExpressao());
 		Simbolo simbolo = new Simbolo(id.getIdName(), tipoInicial,
@@ -290,7 +267,8 @@ public class VisitorSemantico {
 		}
 	}
 
-	private void visitarDeclaracaoProcedimento(DeclaracaoProcedimento d) {
+	@Override
+	public void visit(DeclaracaoProcedimento d) {
 		Id id = d.getId();
 		DefProcedimento def = d.getDefProcedimento();
 		ListaDeclaracaoParametro formais = def.getParametrosFormais();
@@ -308,7 +286,7 @@ public class VisitorSemantico {
 		// escopo do corpo: parametros + comando
 		tabela.abrirEscopo();
 		registrarParametros(formais);
-		visitarComando(def.getComando());
+		def.getComando().accept(this);
 		tabela.fecharEscopo();
 	}
 
@@ -345,51 +323,91 @@ public class VisitorSemantico {
 	 * pelo caminho. Retorna null se nao foi possivel determinar o tipo
 	 * (por exemplo, identificador nao declarado ou operandos invalidos);
 	 * o chamador deve usar essa flag para evitar cascata de erros.
+	 *
+	 * O resultado e produzido via dupla-dispatch: a visita da expressao
+	 * grava em {@link #resultadoTipo}, lido aqui imediatamente apos o
+	 * {@code accept}.
 	 */
 	private Tipo tipoDe(Expressao e) {
 		if (e == null) {
 			return null;
 		}
-		if (e instanceof ValorInteiro) {
-			return TipoPrimitivo.INTEIRO;
-		}
-		if (e instanceof ValorBooleano) {
-			return TipoPrimitivo.BOOLEANO;
-		}
-		if (e instanceof ValorString) {
-			return TipoPrimitivo.STRING;
-		}
-		if (e instanceof Id) {
-			return tipoDeId((Id) e);
-		}
-		if (e instanceof ExpSoma || e instanceof ExpSub) {
-			return tipoBinariaPrimitiva((ExpBinaria) e, TipoPrimitivo.INTEIRO,
-					TipoPrimitivo.INTEIRO);
-		}
-		if (e instanceof ExpAnd || e instanceof ExpOr) {
-			return tipoBinariaPrimitiva((ExpBinaria) e, TipoPrimitivo.BOOLEANO,
-					TipoPrimitivo.BOOLEANO);
-		}
-		if (e instanceof ExpConcat) {
-			return tipoBinariaPrimitiva((ExpBinaria) e, TipoPrimitivo.STRING,
-					TipoPrimitivo.STRING);
-		}
-		if (e instanceof ExpEquals) {
-			return tipoEquals((ExpEquals) e);
-		}
-		if (e instanceof ExpMenos) {
-			return tipoUnariaPrimitiva((ExpUnaria) e, TipoPrimitivo.INTEIRO,
-					TipoPrimitivo.INTEIRO);
-		}
-		if (e instanceof ExpNot) {
-			return tipoUnariaPrimitiva((ExpUnaria) e, TipoPrimitivo.BOOLEANO,
-					TipoPrimitivo.BOOLEANO);
-		}
-		if (e instanceof ExpLength) {
-			return tipoUnariaPrimitiva((ExpUnaria) e, TipoPrimitivo.STRING,
-					TipoPrimitivo.INTEIRO);
-		}
-		return null;
+		resultadoTipo = null;
+		e.accept(this);
+		return resultadoTipo;
+	}
+
+	@Override
+	public void visit(ValorInteiro e) {
+		resultadoTipo = TipoPrimitivo.INTEIRO;
+	}
+
+	@Override
+	public void visit(ValorBooleano e) {
+		resultadoTipo = TipoPrimitivo.BOOLEANO;
+	}
+
+	@Override
+	public void visit(ValorString e) {
+		resultadoTipo = TipoPrimitivo.STRING;
+	}
+
+	@Override
+	public void visit(Id e) {
+		resultadoTipo = tipoDeId(e);
+	}
+
+	@Override
+	public void visit(ExpSoma e) {
+		resultadoTipo = tipoBinariaPrimitiva(e, TipoPrimitivo.INTEIRO,
+				TipoPrimitivo.INTEIRO);
+	}
+
+	@Override
+	public void visit(ExpSub e) {
+		resultadoTipo = tipoBinariaPrimitiva(e, TipoPrimitivo.INTEIRO,
+				TipoPrimitivo.INTEIRO);
+	}
+
+	@Override
+	public void visit(ExpAnd e) {
+		resultadoTipo = tipoBinariaPrimitiva(e, TipoPrimitivo.BOOLEANO,
+				TipoPrimitivo.BOOLEANO);
+	}
+
+	@Override
+	public void visit(ExpOr e) {
+		resultadoTipo = tipoBinariaPrimitiva(e, TipoPrimitivo.BOOLEANO,
+				TipoPrimitivo.BOOLEANO);
+	}
+
+	@Override
+	public void visit(ExpConcat e) {
+		resultadoTipo = tipoBinariaPrimitiva(e, TipoPrimitivo.STRING,
+				TipoPrimitivo.STRING);
+	}
+
+	@Override
+	public void visit(ExpEquals e) {
+		resultadoTipo = tipoEquals(e);
+	}
+
+	@Override
+	public void visit(ExpMenos e) {
+		resultadoTipo = tipoUnariaPrimitiva(e, TipoPrimitivo.INTEIRO,
+				TipoPrimitivo.INTEIRO);
+	}
+
+	@Override
+	public void visit(ExpNot e) {
+		resultadoTipo = tipoUnariaPrimitiva(e, TipoPrimitivo.BOOLEANO,
+				TipoPrimitivo.BOOLEANO);
+	}
+
+	@Override
+	public void visit(ExpLength e) {
+		resultadoTipo = tipoUnariaPrimitiva(e, TipoPrimitivo.STRING,
+				TipoPrimitivo.INTEIRO);
 	}
 
 	private Tipo tipoDeId(Id id) {
